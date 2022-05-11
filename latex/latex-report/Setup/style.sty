@@ -11,8 +11,11 @@
 \usepackage[utf8]{inputenc}        % Source file encoding
 \usepackage[norsk, english]{babel} % typographic rules
 
+
 %--------- color ------------
-\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\usepackage[usenames,dvipsnames,svgnames,table,cmyk]{xcolor} 
+\definecolor{solblue}{HTML}{268BD2}
+
 
 %----- document formatting ---- 
 % Begin paragraphs with an empty line rather than an indent:
@@ -42,10 +45,9 @@
 \usepackage{sectsty}
 \sectionfont{\fontsize{12}{15}\selectfont}
 \subsectionfont{\fontsize{10}{15}\selectfont}
-\sectionfont{\centering \color{purple}} %centering and color
-\subsectionfont{\color{purple}}  % sets color of subsections
-\subsubsectionfont{\color{purple}}
-
+\sectionfont{\centering \color{black}} %centering and color
+\subsectionfont{\color{black}}  % sets color of subsections
+\subsubsectionfont{\color{black}}
 
 %---------- figure & tables ---------------
 \usepackage{graphicx}
@@ -74,6 +76,7 @@
 \usepackage{physics}
 \usepackage{chemformula} % Formula subscripts using \ch{}
 \usepackage{chemfig}
+\usepackage[version=4]{mhchem} % Added by Aleksandar
 
 %------------ frames -------------------
 \usepackage[framemethod=TikZ]{mdframed}
@@ -100,13 +103,14 @@
 \hypersetup{          % set color of referenced items
     colorlinks=true,
     linkcolor=blue,
-    citecolor=red,
+    citecolor=solblue,
     filecolor=blue,      
     urlcolor=blue,}
     
 \usepackage[nameinlink,capitalize]{cleveref} % must be loaded after hyperref  
 
 \crefname{equation}{Equation}{}
+\crefname{algocf}{Algorithm}{Algorithms}
 
 \def\algorithmautorefname{Algorithm}
 
@@ -171,13 +175,50 @@
 
 %--------- bibliography -----------
 \usepackage{csquotes}
+%\usepackage[
+%    backend=biber,
+%    style=numeric,
+%    sorting=none,
+%    backref,
+%    natbib,
+%    hyperref
+%]{biblatex}
+
+
 \usepackage[
     backend=biber,
-    style=numeric,
+    style=authoryear,
     sorting=none,
-    backref,
-    natbib,
-    hyperref
+    maxnames=2,
+    maxbibnames=10,
+    %uniquelist=false, 
+    %uniquename=false,
+    backref=true,
+    natbib=true,
+    hyperref=true
 ]{biblatex}
+
+\renewbibmacro*{cite}{%
+  \printtext[bibhyperref]{%
+    \iffieldundef{shorthand}
+      {\ifthenelse{\ifnameundef{labelname}\OR\iffieldundef{labelyear}}
+         {\usebibmacro{cite:label}%
+          \setunit{\printdelim{nonameyeardelim}}}
+         {\printnames{labelname}%
+          \setunit{\printdelim{nameyeardelim}}}%
+       \usebibmacro{cite:labeldate+extradate}}
+      {\usebibmacro{cite:shorthand}}}}
+
+\DeclareCiteCommand{\citeyear}
+    {\usebibmacro{prenote}}
+    {\bibhyperref{\printfield{year}}\bibhyperref{\printfield{extrayear}}}
+    {\multicitedelim}
+    {\usebibmacro{postnote}}
+
+\DeclareCiteCommand{\citeyearpar}[\mkbibparens]
+    {\usebibmacro{prenote}}
+    {\bibhyperref{\printfield{year}}\bibhyperref{\printfield{extrayear}}}
+    {\multicitedelim}
+    {\usebibmacro{postnote}}
 
 %-------------------- end style ---------------------------
