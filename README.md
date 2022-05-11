@@ -1,23 +1,21 @@
-**Warning:** filenames that contains string 'example' will be deleted when `clean_examples.sh` is run.
+# FYS4411 - Computational Physics II: Quantum Mechanical Systems
 
-# Project X
+## Project 2:
 
-This repository contains programs made for project X
+This repository contains programs made for project 2 in FYS4411
 
 ### Structure
 
-The [latex folder](https://github.com/nicolossus/Numerical-Project-Template/tree/master/latex) contains the LaTeX source for building the report, as well as [figures](https://github.com/nicolossus/Numerical-Project-Template/tree/master/latex/figures) and [tables](https://github.com/nicolossus/Numerical-Project-Template/tree/master/tables) generated in the analyses.
+The [latex folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/latex) contains the LaTeX source for building the report, as well as [figures](https://github.com/nicolossus/FYS4411-Project1/tree/main/latex/figures) and [tables](https://github.com/nicolossus/FYS4411-Project1/tree/main/tables) generated in the analyses.
 
-The [notebooks folder](https://github.com/nicolossus/Numerical-Project-Template/tree/master/notebooks) contains Jupyter notebooks used in the analyses. For details, see the [notebooks readme](https://github.com/nicolossus/Numerical-Project-Template/blob/master/notebooks/README.md).
+The [notebooks folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/notebooks) contains Jupyter Notebooks used in the analyses. For details, see the [notebooks readme](https://github.com/nicolossus/FYS4411-Project1/blob/main/notebooks/README.md).
 
-The [report folder](https://github.com/nicolossus/Numerical-Project-Template/tree/master/report) contains the report rendered to PDF from the LaTeX source.
+The [report folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/report) contains the report rendered to PDF from the LaTeX source.
 
-The [resources folder](https://github.com/nicolossus/Numerical-Project-Template/tree/master/resources) contains project resources such as raw data to be analysed.
+The [resources folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/resources) contains project resources such as literature.
 
-The [src folder](https://github.com/nicolossus/Numerical-Project-Template/tree/master/src) contains the source code. For details, see the [src readme](https://github.com/nicolossus/Numerical-Project-Template/blob/master/src/README.md).
+The [src folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/src) contains the source code. For details, see the [src readme](https://github.com/nicolossus/FYS4411-Project1/blob/main/src/vmc/README.md).
 
-The [test folder](https://github.com/nicolossus/Numerical-Project-Template/tree/master/test) contains procedures for unit testing and [benchmarking](https://github.com/nicolossus/Numerical-Project-Template/tree/master/test/benchmark) the source code developed for the project.
+The [tests folder](https://github.com/FYS4411-Project1/tree/main/tests) contains unit tests. Run tests locally with `pytest`:
 
-### Usage
-
-To compile, test, benchmark and reproduce all results, `cd` into project and run `bash run.sh` in terminal.
+    $ pytest tests -v -W ignore
