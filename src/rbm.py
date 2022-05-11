@@ -85,14 +85,12 @@ def DerivativeWFansatz(NumberHidden, r, a, b, w):
     
     Q = Qfac(NumberHidden, r, b, w)
 
+    denominatir = 1 + np.exp(-Q)   # To reduce FLOPS
+    
     # More const efficient than Morten
     WfDer_a = r - a
-    #WfDer_b = 1 / 1 + np.exp(-Q)  # Visible
-    #WfDer_w = w / 1 + np.exp(-Q)  # Hidden
-
-    nev = 1 + np.exp(-Q) 
-    WfDer_b = 1 / (1 + np.exp(-Q) )
-    WfDer_w = w / (1 + np.exp(-Q) )
+    WfDer_b = 1 / denominator
+    WfDer_w = w / denominator
     
     return  WfDer_a, WfDer_b, WfDer_w
 
