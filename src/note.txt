@@ -1,0 +1,7 @@
+Uten interaction
+ Ψ   -> 2.00
+|ψ|² -> 2.66
+
+Med Interaction
+ ψ   -> 3.2
+|ψ|² -> 3.49
