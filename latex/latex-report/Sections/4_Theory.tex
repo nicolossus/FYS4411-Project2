@@ -12,19 +12,19 @@ A \textit{Boltzmann machine} (BM) is an undirected probabilistic graphical model
 \begin{figure}[H]
 \begin{center}\includegraphics[scale=0.5]{latex/latex-report/Images/bm_visualize.pdf}
 \end{center}
-\caption{Simple visualization of a BM network with a visible layer and hidden layer, both containing five nodes. The links between the nodes are weighted, and they are all contained within a weight matrix, $W$. Every link is undirected, as the connections go both ways.}
+\caption{Simple visualization of a BM network with a visible layer of $n$ nodes and a hidden layer of $m$ nodes. The links between the nodes are weighted, and they are all contained within a weight matrix, $W$. The BM network is fully connected between all nodes. Every link is undirected, as the connections go both ways.}
 \label{fig:vis_BM}
 \end{figure}
 
 \subsection{Restricted Boltzmann Machines}
-
+The visible and hidden layer of the RBM is interconnected, but not intraconnected. The connections are weighted by the weight matrix $W\in\mathbb{R}^{M\times N}$
 
 
 \begin{figure}[H]
-\begin{center}\includegraphics[scale=0.5]{latex/latex-report/Images/rbm_visualize.pdf}n
-R\end{center}
-\caption{Simple visualization of an RBM network with a visible layer and hidden layer, both containing five nodes. The links between the nodes are weighted, and they are all contained within a weight matrix, $W$. Every link is undirected, as the connections go both ways.}
-\label{fig:vis_BM}
+\begin{center}\includegraphics[scale=0.5]{latex/latex-report/Images/rbm_visualize.pdf}
+\end{center}
+\caption{Simple visualization of an RBM network with a visible layer of $n$ nodes and hidden layer layer of $m$ nodes. The links between the nodes are weighted, and they are all contained within a weight matrix, $W$. The RBM network is fully connected between the layers. Every link is undirected, as the connections go both ways.}
+\label{fig:vis_RBM}
 \end{figure}
 
 
