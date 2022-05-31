@@ -190,4 +190,22 @@ class RBM(BaseRBM):
         n_hidden = len(denom)
         r = r.reshape(N, dim, 1)
         grad_weights = r/denom
-        return grad_weights 
+        return grad_weights
+
+    def update_parameters(self, gradients):
+        """
+        Update trainable parameters
+
+        Parameters
+        ---------
+        gradients : [grad_a, grad_b, grad_weights]
+
+        Updates a, b, weights
+        """
+        return 0
+
+    def sample(self):
+        """
+        Perform sampling
+        """
+        return 0
