@@ -7,6 +7,23 @@ from . import BaseRBM
 
 class RBM(BaseRBM):
     def __init__(n_particles, dim, n_hidden, rng=None, seed=0, scale=1.0, loc=0.0, omega=1.0):
+        """
+        Initiates biases and weights of one visible and one hidden layer,
+        in addition to making some variables.
+
+        Parameters
+        ---------
+        n_particles : int, number of particles
+        dim         : int, number of dimensions
+        n_hidden    : int, number of hidden nodes
+        rng         : PRNG
+        seed        : seed number to give the PRNG
+        scale       : standard deviation of the initialization of the biases
+                        and weights. (Normal distribution)
+        loc         : mean of initialization (Normal distribution)
+        omega       : angular frequency of HO potential 
+        """
+
         super(RBM, )__init__(n_particles, dim, n_hidden, rng=rng, seed=seed, scale=scale, loc=loc)
         self.sigma2 = scale*scale
         self.omega2 = omega*omega
@@ -30,6 +47,18 @@ class RBM(BaseRBM):
 
 
     def _gradient(self, r):
+        """
+        Calculates the gradient of the log domain wave function.
+
+        Parameters
+        ---------
+        r       : np.ndarray(shape=(n_particles, dim))
+
+        Returns
+        ---------
+        np.ndarray(shape=(n_particles, dim)) containing the gradients
+        wrt the positions array, r.
+        """
         gaussian_grad = -0.5*(r-self._a)/self._sigma2
         denom = self.denominator(r)
         W_denom = self._W/denom
@@ -37,6 +66,18 @@ class RBM(BaseRBM):
         return gaussian_grad + prod_term
 
     def _log_laplacian(self, r):
+        """
+        Calculates the laplacian of the log domain wave function.
+
+        Parameters
+        ---------
+        r       : np.ndarray(shape=(n_particles, dim))
+
+        Returns
+        ---------
+        scalar containing the sum the laplacian of the log domain wave
+        function.
+        """
         gaussian_grad2 = -0.5
         Q = self.Q(r)
         numerator = Q-1
@@ -46,12 +87,34 @@ class RBM(BaseRBM):
         return (gaussian_grad2 + prod_term2)/self._sigma2
 
     def _laplacian(self, r):
+        """
+        Calculates the laplacian of the wave function in linear domain.
+
+        Parameters
+        ---------
+        r       : np.ndarray(shape=(n_particles, dim))
+
+        Returns
+        ---------
+        Scalar
+        """
         grad = self._gradient(r)
         grad2 = self._log_laplacian(r)
         gradient_term = np.sum(grad*grad)
         return gradient_term + grad2
 
     def _kinetic_energy(self, r):
+        """
+        Calculates the kinetic energy.
+
+        Parameters
+        ---------
+        r       : np.ndarray(shape=(n_particles, dim))
+
+        Returns
+        ---------
+        Scalar
+        """
         kinetic_energy = -0.5*self._laplacian(r)
         return kinetic_energy
 
