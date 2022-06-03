@@ -6,7 +6,7 @@ from . import BaseRBM
 
 
 class RBMWF(BaseRBM):
-    def __init__(self, n_particles, dim, n_hidden, rng=None, seed=0, scale=0.1, loc=0.0, omega=1.0, hard_sphere_diameter=0.00433):
+    def __init__(self, n_particles, dim, n_hidden, rng=None, seed=0, scale=0.5, loc=0.0, omega=1.0, hard_sphere_diameter=0.00433):
         """
         Initiates biases and weights of one visible and one hidden layer,
         in addition to making some variables.
@@ -25,7 +25,7 @@ class RBMWF(BaseRBM):
         """
 
         super().__init__(n_particles, dim, n_hidden, rng=rng, seed=seed, scale=scale, loc=loc)
-        self._sigma2 = scale*scale
+        self._sigma2 = 1.0
         self._omega2 = omega*omega
         self._hard_sphere_diameter = hard_sphere_diameter
 
@@ -43,7 +43,6 @@ class RBMWF(BaseRBM):
         """
         gaussian = np.sum((r-self._a)**2/(4*self._sigma2))
         Q = self._Q(r)
-
         return -gaussian + np.sum(np.log(Q))
 
 
@@ -63,6 +62,7 @@ class RBMWF(BaseRBM):
         gaussian_grad = -0.5*(r-self._a)/self._sigma2
         denom = self._denominator(r)
         W_denom = self._W/denom
+        #print("Shape W_denom: ", W_denom.shape)
         prod_term = 0.5*np.sum(W_denom, axis=2)/self._sigma2
         return gaussian_grad + prod_term
 
@@ -102,8 +102,8 @@ class RBMWF(BaseRBM):
         grad = self._gradient(r)
         grad2 = self._log_laplacian(r)
         gradient_term = np.sum(grad*grad)
-        print("Grad 2: ", grad2)
-        print("Gradient term: ", gradient_term)
+        #print("Grad 2: ", grad2)
+        #print("Gradient term: ", gradient_term)
         return gradient_term + grad2
 
     def _kinetic_energy(self, r):
@@ -119,7 +119,7 @@ class RBMWF(BaseRBM):
         Scalar
         """
         kinetic_energy = -0.5*self._laplacian(r)
-        print("Kinetic energy: ", kinetic_energy)
+        #print("Kinetic energy: ", kinetic_energy)
         return kinetic_energy
 
     def _correlation(self, r):
@@ -154,7 +154,7 @@ class RBMWF(BaseRBM):
         """
         Vint = self._correlation(r)
         Vtrap = 0.5 * self._omega2 * np.sum(r*r)
-        print("Potential energy: ", Vint+Vtrap)
+        #print("Potential energy: ", Vint+Vtrap)
         return Vtrap + Vint
 
 

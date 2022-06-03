@@ -17,7 +17,7 @@ class BaseRBM(metaclass=ABCMeta):
         Dimensionality of system
     """
 
-    def __init__(self, N, dim, nhidden, rng=None, seed=0, scale=0.5, loc=0.0):
+    def __init__(self, N, dim, nhidden, rng=None, seed=None, scale=0.5, loc=0.0):
 
         self._verify_constructor_input(N, dim, nhidden)
         self._rng_constructor = rng(seed)
@@ -25,9 +25,9 @@ class BaseRBM(metaclass=ABCMeta):
         self._loc = loc
         self._N = N
         self._d = dim
-        self._a = self._rng_constructor.normal(loc=loc, scale=scale, size=(N, dim))
+        self._a = self._rng_constructor.normal(loc=loc, scale=scale, size=(N, dim))/np.sqrt(N*dim)
         self._b = self._rng_constructor.normal(loc=loc, scale=scale, size=(nhidden))
-        self._W = self._rng_constructor.normal(loc=loc, scale=scale, size=(N, dim, nhidden))
+        self._W = self._rng_constructor.normal(loc=loc, scale=scale, size=(N, dim, nhidden))/np.sqrt(N*dim)
 
     @abstractmethod
     def wf(self):
