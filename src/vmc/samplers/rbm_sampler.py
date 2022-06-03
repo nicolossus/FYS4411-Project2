@@ -83,6 +83,9 @@ class BaseRBMVMC:
         ----------
         ntrains     : int, number of training rounds
         nsamples    : int, number of MC cycles
+        initial_positions : np.ndarray(shape=(N, dim))
+        eta         : float, learning rate
+        seed        : number, seed for PRNG 
         """
         #print("Shape eta: ", eta.shape)
         state = self.initial_state(initial_positions)
@@ -128,7 +131,7 @@ class BaseRBMVMC:
             gradient_W = 2 * (expect_grad_W_E - expect_grad_W * expect_energy)
             self.update_parameters(gradient_a, gradient_b, gradient_W, m_a, v_a, m_b, v_b, m_W, v_W, eta=eta)
             #if (i%100 == 0):
-            print(f"At iteration {i}: Energy={expect_energy}.")
+            #print(f"At iteration {i}: Energy={expect_energy}.")
             training_energies[i] = expect_energy
         print("Final a: ", self._wf._a)
         print("Final b: ", self._wf._b)

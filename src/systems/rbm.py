@@ -5,7 +5,7 @@ from . import BaseRBM
 
 
 
-class RBM(BaseRBM):
+class RBMWF(BaseRBM):
     def __init__(n_particles, dim, n_hidden, rng=None, seed=0, scale=1.0, loc=0.0, omega=1.0):
         """
         Initiates biases and weights of one visible and one hidden layer,
@@ -21,7 +21,7 @@ class RBM(BaseRBM):
         scale       : standard deviation of the initialization of the biases
                         and weights. (Normal distribution)
         loc         : mean of initialization (Normal distribution)
-        omega       : angular frequency of HO potential 
+        omega       : angular frequency of HO potential
         """
 
         super(RBM, )__init__(n_particles, dim, n_hidden, rng=rng, seed=seed, scale=scale, loc=loc)
@@ -255,7 +255,7 @@ class RBM(BaseRBM):
         grad_weights = r/denom
         return grad_weights
 
-    def update_parameters(self, gradients):
+    def update_parameters(self, gradients, lr=0.01):
         """
         Update trainable parameters
 
