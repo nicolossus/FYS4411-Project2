@@ -17,7 +17,7 @@ class BaseRBM(metaclass=ABCMeta):
         Dimensionality of system
     """
 
-    def __init__(self, N, dim, nhidden, rng=None, seed=0, scale=1.0, loc=0.0):
+    def __init__(self, N, dim, nhidden, rng=None, seed=0, scale=0.5, loc=0.0):
 
         self._verify_constructor_input(N, dim, nhidden)
         self._rng_constructor = rng(seed)

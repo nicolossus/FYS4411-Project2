@@ -6,7 +6,7 @@ from . import BaseRBM
 
 
 class RBMWF(BaseRBM):
-    def __init__(self, n_particles, dim, n_hidden, rng=None, seed=0, scale=1.0, loc=0.0, omega=1.0, hard_sphere_diameter=0.00433):
+    def __init__(self, n_particles, dim, n_hidden, rng=None, seed=0, scale=0.1, loc=0.0, omega=1.0, hard_sphere_diameter=0.00433):
         """
         Initiates biases and weights of one visible and one hidden layer,
         in addition to making some variables.
@@ -41,7 +41,7 @@ class RBMWF(BaseRBM):
         ---------
         A scalar value representing the NQS wave function.
         """
-        gaussian = np.sum((r-self._a)/(4*self._sigma2))
+        gaussian = np.sum((r-self._a)**2/(4*self._sigma2))
         Q = self._Q(r)
 
         return -gaussian + np.sum(np.log(Q))
@@ -102,6 +102,8 @@ class RBMWF(BaseRBM):
         grad = self._gradient(r)
         grad2 = self._log_laplacian(r)
         gradient_term = np.sum(grad*grad)
+        print("Grad 2: ", grad2)
+        print("Gradient term: ", gradient_term)
         return gradient_term + grad2
 
     def _kinetic_energy(self, r):
@@ -117,6 +119,7 @@ class RBMWF(BaseRBM):
         Scalar
         """
         kinetic_energy = -0.5*self._laplacian(r)
+        print("Kinetic energy: ", kinetic_energy)
         return kinetic_energy
 
     def _correlation(self, r):
@@ -151,6 +154,7 @@ class RBMWF(BaseRBM):
         """
         Vint = self._correlation(r)
         Vtrap = 0.5 * self._omega2 * np.sum(r*r)
+        print("Potential energy: ", Vint+Vtrap)
         return Vtrap + Vint
 
 
@@ -167,7 +171,7 @@ class RBMWF(BaseRBM):
         An np.ndarray(shape=(n_hidden)) value corresponding to
                     (1 + e^{b+rW/s^2})
         """
-        Q = 1 + np.exp(self._b + np.einsum("ij,ijk->k", r, self._W)/self._sigma2)
+        Q = np.exp(self._b + np.einsum("ij,ijk->k", r, self._W)/self._sigma2)
         return Q
 
     def _denominator(self, r):

@@ -14,8 +14,8 @@ from pathos.pools import ProcessPool
 from tqdm.auto import tqdm
 
 from ..utils import (block, check_and_set_nchains, early_stopping,
-                     generate_seed_sequence, setup_logger, tune_dt_table,
-                     tune_scale_table)
+                    generate_seed_sequence, setup_logger, tune_dt_table,
+                    tune_scale_table)
 from .state import State
 
 warnings.filterwarnings("ignore", message="divide by zero encountered")

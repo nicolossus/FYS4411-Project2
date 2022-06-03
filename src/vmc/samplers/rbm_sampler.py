@@ -96,6 +96,7 @@ class BaseRBMVMC:
 
             for _ in range(nsamples):
                 state  = self.step(state, seed)
+                #print("State positions: ", state.positions)
                 energies.append(self._locE_fn(state.positions))
                 grad_a.append(self._grad_a_fn(state.positions))
                 grad_b.append(self._grad_b_fn(state.positions))
@@ -105,15 +106,21 @@ class BaseRBMVMC:
             grad_a = np.array(grad_a)
             grad_b = np.array(grad_b)
             grad_W = np.array(grad_W)
+            shape_a = grad_a.shape
+            shape_b = grad_b.shape
+            shape_W = grad_W.shape
 
             expect_energy = np.mean(energies)
             expect_grad_a = np.array(np.mean(grad_a, axis=0))
             expect_grad_b = np.array(np.mean(grad_b, axis=0))
             expect_grad_W = np.array(np.mean(grad_W, axis=0))
-            expect_grad_a_E = np.mean(np.multiply(energies, grad_a), axis=0)
+            #print("Shape E*a: ", (energies*grad_a).shape)
+            expect_grad_a_E = np.mean(energies.reshape(nsamples, 1, 1)*grad_a, axis=0)
             expect_grad_b_E = np.mean(energies.reshape(nsamples, 1)*grad_b, axis=0)
-            expect_grad_W_E = np.mean(energies*grad_W, axis=0)
+            expect_grad_W_E = np.mean(energies.reshape(nsamples, 1, 1, 1)*grad_W, axis=0)
 
+
+            """
             print("Shape grad a: ", expect_grad_a.shape)
             print("Shape grad b: ", expect_grad_b.shape)
             print("Shape grad W: ", expect_grad_W.shape)
@@ -122,7 +129,7 @@ class BaseRBMVMC:
             print("Shape bE: ", expect_grad_b_E.shape)
             print("Shape WE: ", expect_grad_W_E.shape)
             print("Shape energies: ", energies.shape)
-
+            """
 
             gradient_a = 2 * (expect_grad_a_E - expect_grad_a * expect_energy)
             gradient_b = 2 * (expect_grad_b_E - expect_grad_b * expect_energy)
@@ -130,12 +137,12 @@ class BaseRBMVMC:
 
             self.update_parameters(gradient_a, gradient_b, gradient_W, eta=eta)
 
-            printf(f"At iteration {i}: Energy={expect_energy}.")
+            print(f"At iteration {i}: Energy={expect_energy}.")
             training_energies[i] = expect_energy
 
         return training_energies
 
-    def update_parameters(self, grad_a, grad_b, grad_W, eta=0.01):
+    def update_parameters(self, grad_a, grad_b, grad_W, eta=0.1):
         """
         Updates the biases and weights of the RBM
 
