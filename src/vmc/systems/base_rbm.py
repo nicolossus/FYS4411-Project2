@@ -15,6 +15,15 @@ class BaseRBM(metaclass=ABCMeta):
         Number of particles in system
     dim : int
         Dimensionality of system
+    nhidden : int
+        Number of hidden nodes
+    rng : PRNG
+    seed : number,
+        given to PRNG
+    scale : float,
+        Scale of normal distribution used for initialising weights/bias
+    loc : float,
+        mean of normal distribution used for initialising weights/bias 
     """
 
     def __init__(self, N, dim, nhidden, rng=None, seed=None, scale=0.5, loc=0.0):
