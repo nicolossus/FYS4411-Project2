@@ -63,7 +63,7 @@ class RBMWF(BaseRBM):
         #print("Gaussain grad: ", gaussian_grad)
         denom = self._denominator(r)
         #print("denom: ", denom)
-        W_denom = self._W / denom
+        W_denom = (self._W ) / denom
         #print("Shape W_denom: ", W_denom.shape)
         #print("0.5sum(W_denom)", 0.5*np.sum(W_denom, axis=2))
         prod_term = 0.5*np.sum(W_denom) #/self._sigma2
@@ -85,13 +85,14 @@ class RBMWF(BaseRBM):
         """
         gaussian_grad2 = -0.5
         Q = self._Q(r)
-        numerator = np.exp(self._b + r.T @ self._W)
-        Wsquared = self._W*self._W # (n, d, h)
+        numerator = np.exp(self._b + (r.T @ self._W)/self._sigma2)
+        Wsquared = self._W**2 # (n, d, h)
         # Summing over all dimensions for the
         #num = np.transpose((numerator/(Q*Q)), axes=(0, 2, 1))
         #print("Shape num: ", num.shape)
-        prod_term2 = Wsquared*(numerator/(Q*Q))
-        return np.sum(0.5*(gaussian_grad2 + prod_term2))
+        prod_term2 = 0.5*Wsquared*((numerator)/(Q**2))
+        prod_term2 = np.sum(prod_term2, axis=2)
+        return np.sum((gaussian_grad2 + prod_term2))
 
     def _laplacian(self, r):
         """
@@ -199,8 +200,11 @@ class RBMWF(BaseRBM):
         ---------
         np.ndarray(shape=(n_hidden))
         """
-        #denominator = self._softplus(-self._b - r.T @ self._W/self._sigma2)
-        denominator = 1 + np.exp(-self._b - r.T @ self._W)
+        #denominator = self._softplus(-self._b - (r.T @ self._W)/self._sigma2)
+        #print("New denom: ", denominator)
+        denominator = 1 + np.exp(-self._b - (r.T @ self._W)/self._sigma2)
+        denominator = np.sum(np.sum(denominator, axis=1), axis=0)
+        #print("Old denom: ", denominator)
         return denominator
 
     def local_energy(self, r):
@@ -251,8 +255,8 @@ class RBMWF(BaseRBM):
         ---------
         np.ndarray(shape=(n_hidden)) containing the gradient wrt b.
         """
-        denom = self._denominator(r).reshape(self._nhidden)
-        grad_b = 0.5/denom
+        denom = self._denominator(r)
+        grad_b = 0.5 / (denom)
         return grad_b
 
     def grad_weights(self, r):
