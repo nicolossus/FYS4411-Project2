@@ -23,7 +23,7 @@ class BaseRBM(metaclass=ABCMeta):
     scale : float,
         Scale of normal distribution used for initialising weights/bias
     loc : float,
-        mean of normal distribution used for initialising weights/bias 
+        mean of normal distribution used for initialising weights/bias
     """
 
     def __init__(self, N, dim, nhidden, rng=None, seed=None, scale=0.5, loc=0.0):
@@ -34,6 +34,7 @@ class BaseRBM(metaclass=ABCMeta):
         self._loc = loc
         self._N = N
         self._d = dim
+        self._nhidden = nhidden 
         self._a = self._rng_constructor.normal(loc=loc, scale=scale, size=(N, dim))/np.sqrt(N*dim)
         self._b = self._rng_constructor.normal(loc=loc, scale=scale, size=(nhidden))
         self._W = self._rng_constructor.normal(loc=loc, scale=scale, size=(N, dim, nhidden))/np.sqrt(N*dim)

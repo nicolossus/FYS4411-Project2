@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from src import vmc
+from src import vmc, NonInteractRBM
 import matplotlib.pyplot as plt
 
 
@@ -36,6 +36,7 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
             for ih in range(NumberHidden):
                 sum1 += w[iq,ix,ih]/(1+np.exp(-Q[ih]))
                 sum2 += w[iq,ix,ih]**2 * np.exp(Q[ih]) / (1.0 + np.exp(Q[ih]))**2
+                #print("ihQ: ", (1+np.exp(-Q[ih])))
                 #sum2 += w[iq,ix,ih]**2 * np.exp(-Q[ih]) / (1.0 + np.exp(-Q[ih]))**2 # ???
 
             #dlnpsi1 = -(r[iq,ix] - a[iq,ix]) /sig2 + sum1/sig2 # From Moren
@@ -46,8 +47,10 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
             locenergy += 0.5*(-dlnpsi1*dlnpsi1 - dlnpsi2 + r[iq,ix]**2)
             kinetic_energy += -0.5*(dlnpsi1*dlnpsi1 + dlnpsi2)
             potential_energy += 0.5*r[iq,ix]**2
-            print("KE: ", kinetic_energy)
-            print("PE: ", potential_energy)
+            #print("KE: ", kinetic_energy)
+            #print("PE: ", potential_energy)
+            #print("gauss: ", -0.5*(r[iq, ix]-a[iq, ix]))
+            #print("sum: ", 0.5*sum1)
 
     if(interaction==True):
         for iq1 in range(NumberParticles):
@@ -57,6 +60,7 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
                     distance += (r[iq1,ix] - r[iq2,ix])**2
 
                 locenergy += 1 / np.sqrt(distance)
+
     #locenergy = kinetic_energy + potential_energy
     return locenergy
 
@@ -67,16 +71,38 @@ N = 1
 dim = 1
 nhidden = 2
 
-wf = vmc.RBMWF(N, dim, nhidden, scale=0.5, rng=default_rng, seed=2123)
-rng = default_rng(0)
-rbm = vmc.samplers.RWMRBM(wf)
+rng = default_rng(2113)
+r = rng.standard_normal(size=(N, dim))
+v_bias = rng.standard_normal(size=(N, dim))
+h_bias = rng.standard_normal(size=(nhidden))
+kernel = rng.standard_normal(size=(N, dim, nhidden))
+jax_wf = NonInteractRBM()
+
+
+
+wf = vmc.RBMWF(N, dim, nhidden, scale=0.5, rng=default_rng, seed=2113)
+print("JAX wf: ", jax_wf.wf(r, wf._a, wf._b, wf._W))
+print("JAX df: ", jax_wf.drift_force(r, wf._a, wf._b, wf._W))
+print("JAX LE: ", jax_wf.local_energy(r, wf._a, wf._b, wf._W))
+print("JAX grad a: ", jax_wf.grad_v_bias(r, wf._a, wf._b, wf._W))
+print("JAX grad b: ", jax_wf.grad_h_bias(r, wf._a, wf._b, wf._W))
+print("JAX grad W: ", jax_wf.grad_kernel(r, wf._a, wf._b, wf._W))
+print("wf wf: ", wf.wf(r))
+print("wf df: ", wf.drift_force(r))
+print("wf LE: ", wf.local_energy(r))
+print("wf grad a: ", wf.grad_a(r))
+print("wf grad b: ", wf.grad_b(r))
+print("wf grad W: ", wf.grad_weights(r))
+wf._Q(r)
+wf._denominator(r)
+rng = default_rng(None)
+rbm = vmc.samplers.LMHRBM(wf)
 initial_positions = rng.normal(loc=0.0, scale=1.0, size=(N, dim))
-print("Initial positions: ", initial_positions)
-print("WF LE: ", wf.local_energy(initial_positions))
-print("LE: ", LocalEnergy(N, dim, nhidden, initial_positions, wf._a, wf._b, wf._W, False))
+print("LE: ", LocalEnergy(N, dim, nhidden, r, wf._a, wf._b, wf._W, False))
 
-energies = rbm.train(training_iterations, nsamples, initial_positions, eta=0.05)
 
+
+energies = rbm.train(training_iterations, nsamples, initial_positions, eta=0.1)
 
 for i, energy in enumerate(energies):
     #if energy < 2.5:

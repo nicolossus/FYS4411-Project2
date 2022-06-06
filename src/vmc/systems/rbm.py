@@ -41,7 +41,7 @@ class RBMWF(BaseRBM):
         ---------
         A scalar value representing the NQS wave function.
         """
-        gaussian = 0.25*(r-self._a)*(r-self._a)/(self._sigma2)
+        gaussian = 0.25*(r-self._a)**2
         Q = self._Q(r)
         return -np.sum(gaussian)+0.5*np.sum(np.log(Q))
 
@@ -60,9 +60,14 @@ class RBMWF(BaseRBM):
         wrt the positions array, r.
         """
         gaussian_grad = -0.5*(r-self._a)/self._sigma2
+        #print("Gaussain grad: ", gaussian_grad)
         denom = self._denominator(r)
-        W_denom = self._W/denom
-        prod_term = 0.5*np.sum(W_denom, axis=2)/self._sigma2
+        #print("denom: ", denom)
+        W_denom = self._W / denom
+        #print("Shape W_denom: ", W_denom.shape)
+        #print("0.5sum(W_denom)", 0.5*np.sum(W_denom, axis=2))
+        prod_term = 0.5*np.sum(W_denom) #/self._sigma2
+        #print("Shape prod_term: ", prod_term.shape)
         return gaussian_grad + prod_term
 
     def _log_laplacian(self, r):
@@ -78,13 +83,15 @@ class RBMWF(BaseRBM):
         scalar containing the sum the laplacian of the log domain wave
         function.
         """
-        gaussian_grad2 = -1
+        gaussian_grad2 = -0.5
         Q = self._Q(r)
-        numerator = Q-1
+        numerator = np.exp(self._b + r.T @ self._W)
         Wsquared = self._W*self._W # (n, d, h)
         # Summing over all dimensions for the
-        prod_term2 = np.sum(Wsquared*numerator/(Q*Q))/self._sigma2
-        return 0.5*(gaussian_grad2 + prod_term2)/self._sigma2
+        #num = np.transpose((numerator/(Q*Q)), axes=(0, 2, 1))
+        #print("Shape num: ", num.shape)
+        prod_term2 = Wsquared*(numerator/(Q*Q))
+        return np.sum(0.5*(gaussian_grad2 + prod_term2))
 
     def _laplacian(self, r):
         """
@@ -116,7 +123,7 @@ class RBMWF(BaseRBM):
         Scalar
         """
         kinetic_energy = -0.5*self._laplacian(r)
-        print("Kinetic energy: ", kinetic_energy)
+        #print("Kinetic energy: ", kinetic_energy)
         return kinetic_energy
 
     def _correlation(self, r):
@@ -151,8 +158,17 @@ class RBMWF(BaseRBM):
         """
         #Vint = self._correlation(r)
         Vtrap = 0.5 * self._omega2 * np.sum(r*r)
-        print("Potential energy: ", Vtrap)
+        #print("Potential energy: ", Vtrap)
         return Vtrap #+ Vint
+
+
+    def _softplus(self, x):
+        """Softplus activation function.
+
+        Computes the element-wise function
+                softplus(x) = log(1 + e^x)
+        """
+        return np.logaddexp(x, 0)
 
 
     def _Q(self, r):
@@ -168,7 +184,8 @@ class RBMWF(BaseRBM):
         An np.ndarray(shape=(n_hidden)) value corresponding to
                     (1 + e^{b+rW/s^2})
         """
-        Q = 1 + np.exp(self._b + np.einsum("ij,ijk->k", r, self._W)/self._sigma2)
+        #Q =  self._softplus(self._b + r.T @ self._W/self._sigma2)
+        Q = 1 + np.exp(self._b + r.T @ self._W)
         return Q
 
     def _denominator(self, r):
@@ -182,7 +199,8 @@ class RBMWF(BaseRBM):
         ---------
         np.ndarray(shape=(n_hidden))
         """
-        denominator = np.exp(-self._b - np.einsum("ij,ijk->k", r, self._W)/self._sigma2) + 1
+        #denominator = self._softplus(-self._b - r.T @ self._W/self._sigma2)
+        denominator = 1 + np.exp(-self._b - r.T @ self._W)
         return denominator
 
     def local_energy(self, r):
@@ -217,7 +235,7 @@ class RBMWF(BaseRBM):
         np.ndarray(shape=(n_particles, dim)) containing the gradients
         wrt a.
         """
-        grad_a = (r-self._a)/(2*self._sigma2)
+        grad_a = (r-self._a)*0.5
         return grad_a
 
     def grad_b(self, r):
@@ -233,7 +251,7 @@ class RBMWF(BaseRBM):
         ---------
         np.ndarray(shape=(n_hidden)) containing the gradient wrt b.
         """
-        denom = self._denominator(r)
+        denom = self._denominator(r).reshape(self._nhidden)
         grad_b = 0.5/denom
         return grad_b
 
@@ -255,8 +273,8 @@ class RBMWF(BaseRBM):
         N, dim = r.shape
         denom = self._denominator(r)
         r = r.reshape(N, dim, 1)
-        grad_weights = 0.5*r/denom
-        return grad_weights/self._sigma2
+        grad_weights = (0.5*r/denom)
+        return grad_weights
 
     def drift_force(self, r):
         """
