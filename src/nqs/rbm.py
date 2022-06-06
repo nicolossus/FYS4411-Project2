@@ -9,12 +9,9 @@ import numpy as np
 
 '''
 TODO:
-- why does nn.initializers.he_normal fail?
 - check against analytical (see printout of "variables" in main block for
 initial values of biases and weight matrix)
 '''
-
-default_kernel_init = jax.nn.initializers.normal(stddev=0.01)
 
 
 class RBM(nn.Module):
@@ -30,11 +27,11 @@ class RBM(nn.Module):
     # Variance
     sigma2: float = 1.0
     # Initializer for the Dense layer matrix
-    kernel_init: Callable = default_kernel_init  # nn.initializers.he_normal
+    kernel_init: Callable = nn.initializers.he_normal()
     # Initializer for the hidden bias
-    hidden_bias_init: Callable = default_kernel_init  # nn.initializers.he_normal
+    hidden_bias_init: Callable = nn.initializers.normal(stddev=0.01)
     # Initializer for the visible bias
-    visible_bias_init: Callable = default_kernel_init  # nn.initializers.he_normal
+    visible_bias_init: Callable = nn.initializers.normal(stddev=0.01)
 
     @nn.compact
     def __call__(self, input):
