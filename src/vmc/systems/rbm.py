@@ -66,7 +66,7 @@ class RBMWF(BaseRBM):
         W_denom = (self._W ) / denom
         #print("Shape W_denom: ", W_denom.shape)
         #print("0.5sum(W_denom)", 0.5*np.sum(W_denom, axis=2))
-        prod_term = 0.5*np.sum(W_denom) #/self._sigma2
+        prod_term = 0.5*np.sum(W_denom, axis=2) #/self._sigma2
         #print("Shape prod_term: ", prod_term.shape)
         return gaussian_grad + prod_term
 
@@ -85,7 +85,7 @@ class RBMWF(BaseRBM):
         """
         gaussian_grad2 = -0.5
         Q = self._Q(r)
-        numerator = np.exp(self._b + (r.T @ self._W)/self._sigma2)
+        numerator = np.exp(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
         Wsquared = self._W**2 # (n, d, h)
         # Summing over all dimensions for the
         #num = np.transpose((numerator/(Q*Q)), axes=(0, 2, 1))
@@ -185,8 +185,11 @@ class RBMWF(BaseRBM):
         An np.ndarray(shape=(n_hidden)) value corresponding to
                     (1 + e^{b+rW/s^2})
         """
-        #Q =  self._softplus(self._b + r.T @ self._W/self._sigma2)
-        Q = 1 + np.exp(self._b + r.T @ self._W)
+        Q =  self._softplus(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
+        print("New Q: ", np.exp(Q))
+        Q = 1 + np.exp(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
+        print("Old Q: ", Q)
+
         return Q
 
     def _denominator(self, r):
@@ -200,11 +203,10 @@ class RBMWF(BaseRBM):
         ---------
         np.ndarray(shape=(n_hidden))
         """
-        #denominator = self._softplus(-self._b - (r.T @ self._W)/self._sigma2)
-        #print("New denom: ", denominator)
-        denominator = 1 + np.exp(-self._b - (r.T @ self._W)/self._sigma2)
-        denominator = np.sum(np.sum(denominator, axis=1), axis=0)
-        #print("Old denom: ", denominator)
+        denominator = self._softplus(-self._b - np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
+        print("New denom: ", np.exp(denominator))
+        denominator = 1 + np.exp(-self._b - np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
+        print("Old denom: ", denominator)
         return denominator
 
     def local_energy(self, r):
