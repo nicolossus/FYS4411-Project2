@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from typing import Callable
+from typing import Any, Callable
 
 import flax.linen as nn
 import jax
 import jax.numpy as jnp
 import numpy as np
 
-'''
-TODO:
-- check against analytical (see printout of "variables" in main block for
-initial values of biases and weight matrix)
-'''
+jax.config.update("jax_enable_x64", True)
+jax.config.update('jax_platform_name', 'cpu')
 
 
 class RBM(nn.Module):
@@ -26,6 +23,8 @@ class RBM(nn.Module):
     nhidden: int = 2
     # Variance
     sigma2: float = 1.0
+    # Precision
+    param_dtype: Any = np.float64
     # Initializer for the Dense layer matrix
     kernel_init: Callable = nn.initializers.he_normal()
     # Initializer for the hidden bias
@@ -41,7 +40,7 @@ class RBM(nn.Module):
             "visible_bias",
             self.visible_bias_init,
             (input.shape[-1],),
-            np.float64
+            self.param_dtype,
         )
 
         x_v = jnp.linalg.norm(input - v_bias)
@@ -53,21 +52,61 @@ class RBM(nn.Module):
             features=self.nhidden,
             use_bias=True,
             kernel_init=self.kernel_init,
-            bias_init=self.hidden_bias_init
+            bias_init=self.hidden_bias_init,
+            param_dtype=self.param_dtype,
         )
 
         x_h = layer(input / self.sigma2)
-        x_h = nn.log_sigmoid(-x_h)
+        x_h = nn.softplus(x_h)
         x_h = jnp.sum(x_h, axis=-1)
-        x_h *= -0.5
+        x_h *= 0.5
 
         return x_v + x_h
 
 
 if __name__ == "__main__":
-    psi = RBM(nhidden=2, sigma2=1.0)
-    r = jnp.array([[0.2, 0.5], [0.3, 0.7]])
-    variables = psi.init(jax.random.PRNGKey(0), r)
-    print(variables)
-    output = psi.apply(variables, r)
-    print(output)
+
+    P = 2
+    dim = 2
+    nhidden = 2
+
+    rng = np.random.default_rng(42)
+
+    P = 2
+    dim = 2
+    M = P * dim
+    r = rng.standard_normal(size=M)
+
+    psi = RBM(nhidden=nhidden, sigma2=1.0)
+    params = psi.init(jax.random.PRNGKey(0), r)
+    output = psi.apply(params, r)
+
+    print("init pos", list(r))
+    print("init params", params)
+    print("eval", output)
+
+    #print(jax.tree_map(lambda x: x.shape, params))
+
+    def gradient(model, params, arg):
+        gr = jax.grad(lambda p, y: model.apply(p, y))(params, arg)["params"]
+        return gr
+
+    def gradient2(model, params, arg):
+        gr = jax.grad(lambda p, y: model.apply(p, y),
+                      argnums=1)(params, arg)
+        return gr
+
+    gr = gradient(psi, params, r)
+    print("Gradients")
+    print(jax.tree_map(lambda x: x.sum(), gr))
+
+    F = 2 * gradient2(psi, params, r)
+    print("F =", F)
+
+    '''
+    P = 2
+    d = 2
+    M = P * d  # visible
+    N = 2  # hidden
+    print(M, N)
+    '''

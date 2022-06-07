@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import copy
 from abc import abstractmethod
 from functools import partial
 
@@ -11,14 +12,16 @@ jax.config.update("jax_enable_x64", True)
 jax.config.update('jax_platform_name', 'cpu')
 
 
-class NonInteractRBM:
+class InteractRBM:
     """Base class for creating a quantum system where the wave function is
     represented by a gaussian-binary restricted Boltzmann machine.
 
     The implementation assumes a logarithmic wave function.
     """
 
-    def __init__(self, sigma2=1.):
+    def __init__(self, nparticles, dim, sigma2=1.):
+        self._N = nparticles
+        self._dim = dim
         self._sigma2 = sigma2
         self._sigma2_factor = 1 / self._sigma2
         self._sigma2_factor2 = 0.5 * 1 / self._sigma2
@@ -54,7 +57,15 @@ class NonInteractRBM:
     @partial(jax.jit, static_argnums=(0,))
     def potential(self, r):
         """Potential energy function"""
-        return 0.5 * jnp.sum(r * r)
+        # HO trap
+        v_trap = 0.5 * jnp.sum(r * r)
+
+        # Interaction
+        r_cpy = copy.deepcopy(r).reshape(self._N, self._dim)
+        r_dist = jnp.linalg.norm(r_cpy[None, ...] - r_cpy[:, None], axis=-1)
+        v_int = jnp.sum(jnp.triu(1 / r_dist, k=1))
+
+        return v_trap + v_int
 
     @partial(jax.jit, static_argnums=(0,))
     def pdf(self, r, v_bias, h_bias, kernel):
@@ -156,7 +167,7 @@ if __name__ == "__main__":
                        [0.40923255, -0.04661963],
                        [-1.21311022,  0.80609878]])
 
-    system = NonInteractRBM()
+    system = InteractRBM(P, dim)
     print("wf eval:", system.wf(r, v_bias, h_bias, kernel))
     print("logprob:", system.logprob(r, v_bias, h_bias, kernel))
     print("grad v_bias", system.grad_v_bias(r, v_bias, h_bias, kernel).sum())
