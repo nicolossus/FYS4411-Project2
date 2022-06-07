@@ -17,7 +17,7 @@ class RWMRBM(BaseRBMVMC):
                          inference_scheme='Random Walk Metropolis',
                          rng=rng)
 
-    def step(self, state, seed, scale=1.0):
+    def step(self, state, seed, scale=3.0):
         """One step of the random walk Metropolis algorithm
 
         Parameters
