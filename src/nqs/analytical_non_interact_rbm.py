@@ -81,7 +81,8 @@ class AniRBM:
         _expit = expit(h_bias + (r @ kernel) * self._sigma2_factor)
         _expos = expit(-h_bias - (r @ kernel) * self._sigma2_factor)
         kernel2 = kernel * kernel
-        exp_prod = _expos[:, np.newaxis] @ _expit[:, np.newaxis].T
+        #exp_prod = _expos[:, np.newaxis] @ _expit[:, np.newaxis].T
+        exp_prod = _expos * _expit
         gr = -self._sigma2_factor2 + self._sigma4_factor * kernel2 @ exp_prod
         return gr
 
@@ -90,13 +91,13 @@ class AniRBM:
 
         # where to sum?
 
-        _laplace = self._laplace_wf2(r, v_bias, h_bias, kernel)
-        #_laplace = self._laplace_wf2(r, v_bias, h_bias, kernel).sum()
+        #_laplace = self._laplace_wf2(r, v_bias, h_bias, kernel)
+        _laplace = self._laplace_wf2(r, v_bias, h_bias, kernel).sum()
         _grad = self._grad_wf(r, v_bias, h_bias, kernel)
-        #_grad2 = np.sum(_grad * _grad)
-        _grad2 = _grad * _grad
+        _grad2 = np.sum(_grad * _grad)
+        #_grad2 = _grad * _grad
 
-        return -0.5 * np.sum(_laplace + _grad2[:, np.newaxis])
+        return -0.5 * (_laplace + _grad2)
         # return -0.5 * (_laplace + _grad2)
 
     def local_energy(self, r, v_bias, h_bias, kernel):
