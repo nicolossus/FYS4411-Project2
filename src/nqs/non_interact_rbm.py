@@ -20,6 +20,8 @@ class NonInteractRBM:
 
     def __init__(self, sigma2=1.):
         self._sigma2 = sigma2
+        self._sigma2_factor = 1 / self._sigma2
+        self._sigma2_factor2 = 0.5 * 1 / self._sigma2
 
     @partial(jax.jit, static_argnums=(0,))
     def _softplus(self, x):
@@ -36,10 +38,10 @@ class NonInteractRBM:
 
         # visible layer
         x_v = jnp.linalg.norm(r - v_bias)
-        x_v *= -x_v / (2 * self._sigma2)
+        x_v *= -x_v * self._sigma2_factor2
 
         # hidden layer
-        x_h = self._softplus(h_bias + (r.T @ kernel) / self._sigma2)
+        x_h = self._softplus(h_bias + (r.T @ kernel) * self._sigma2_factor)
         x_h = jnp.sum(x_h, axis=-1)
 
         return x_v + x_h
@@ -68,7 +70,8 @@ class NonInteractRBM:
     def _local_kinetic_energy(self, r, v_bias, h_bias, kernel):
         """Evaluate the local kinetic energy"""
 
-        n = r.shape[0]
+        #n = r.shape[0]
+        n = len(r)
         eye = jnp.eye(n)
 
         grad_wf = jax.grad(self.wf, argnums=0)
@@ -87,7 +90,8 @@ class NonInteractRBM:
 
         def ke_closure(r): return self._local_kinetic_energy(
             r, v_bias, h_bias, kernel)
-        ke = jnp.sum(jax.vmap(ke_closure)(r))
+        #ke = jnp.sum(jax.vmap(ke_closure)(r))
+        ke = jnp.sum(ke_closure(r))
         pe = self.potential(r)
 
         return ke + pe
@@ -132,19 +136,31 @@ if __name__ == "__main__":
     r = jnp.array([[0.2, 0.5], [0.3, 0.7]])
     '''
 
-    P = 1
-    dim = 1
-    nhidden = 2
+    P = 2        # particles
+    dim = 2      # dimensionality
+    M = P * dim  # visible neurons
+    N = 2        # hidden neurons
 
-    rng = default_rng(None)
-    r = rng.standard_normal(size=(P, dim))
-    v_bias = rng.standard_normal(size=(P, dim))
-    h_bias = rng.standard_normal(size=(nhidden))
-    kernel = rng.standard_normal(size=(P, dim, nhidden))
+    rng = default_rng(42)
+    r = rng.standard_normal(size=(M,))
+    v_bias = rng.standard_normal(size=(M,))
+    h_bias = rng.standard_normal(size=(N,))
+    kernel = rng.standard_normal(size=(M, N))
+
+    r = np.array([0.30471707975443135, -1.0399841062404955,
+                 0.7504511958064572, 0.9405647163912139])
+    v_bias = np.array([-0.00631753,  0.01129719, -0.001397, -0.01849913])
+    h_bias = np.array([0.00869276, -0.00643394])
+    kernel = np.array([[-0.40775875,  0.08298116],
+                       [-0.36875534,  0.03443719],
+                       [0.40923255, -0.04661963],
+                       [-1.21311022,  0.80609878]])
 
     system = NonInteractRBM()
-    print(system.wf(r, v_bias, h_bias, kernel))
-    print(system._log_rbm(r, v_bias, h_bias, kernel).sum())
-    print(system.logprob(r, v_bias, h_bias, kernel))
-    print("")
-    print(system.local_energy(r, v_bias, h_bias, kernel))
+    print("wf eval:", system.wf(r, v_bias, h_bias, kernel))
+    print("logprob:", system.logprob(r, v_bias, h_bias, kernel))
+    print("grad v_bias", system.grad_v_bias(r, v_bias, h_bias, kernel).sum())
+    print("grad h_bias", system.grad_h_bias(r, v_bias, h_bias, kernel).sum())
+    print("grad kernel", system.grad_kernel(r, v_bias, h_bias, kernel).sum())
+    print("drift force:", system.drift_force(r, v_bias, h_bias, kernel))
+    print("local energy:", system.local_energy(r, v_bias, h_bias, kernel))
