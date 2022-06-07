@@ -136,7 +136,8 @@ if __name__ == "__main__":
     dim = 1
     nhidden = 2
 
-    rng = default_rng(None)
+
+    rng = default_rng(2113)
     r = rng.standard_normal(size=(P, dim))
     v_bias = rng.standard_normal(size=(P, dim))
     h_bias = rng.standard_normal(size=(nhidden))
