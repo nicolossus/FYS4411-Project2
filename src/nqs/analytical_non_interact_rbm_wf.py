@@ -11,8 +11,11 @@ class AniRBMwf:
     The implementation assumes a logarithmic wave function.
     """
 
-    def __init__(self, sigma2=1.):
+    def __init__(self, nparticles, dim, hard_shell_diameter=0.0043, sigma2=1.):
 
+        self._N = nparticles
+        self._d = dim
+        self._a = hard_shell_diameter
         self._sigma2 = sigma2
         self._sigma4 = sigma2 * sigma2
         self._sigma2_factor = 1 / self._sigma2
@@ -48,7 +51,22 @@ class AniRBMwf:
 
     def potential(self, r):
         """Potential energy function"""
-        return 0.5 * np.sum(r * r)
+        # HO trap
+        v_trap = 0.5 * np.sum(r * r)
+        """
+        # Interaction
+        r_cpy = r.copy().reshape(self._N, self._d)
+        r_dist = np.linalg.norm(r_cpy[None, ...] - r_cpy[:, None], axis=-1)
+        #print(r_dist)
+        triu_idxs = np.triu_indices(self._N, k=1)
+        distances = r_dist[triu_idxs]
+        f = 1 / distances * (distances > self._a)
+        #v_int = np.sum(np.triu(1 - self._a / r_dist, k=1))
+        v_int = np.sum(f)
+        """
+        #print(v_int)
+
+        return v_trap #+ v_int
 
     def pdf(self, r, v_bias, h_bias, kernel):
         """Probability amplitude"""
