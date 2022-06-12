@@ -73,7 +73,7 @@ def tune_scale_rwm_table(scale, acc_rate):
     elif acc_rate < 0.2:
         # reduce by ten percent
         scale *= 0.9
-    elif acc_rate > 0.45:
+    elif acc_rate > 0.5:
         # increase by ten percent
         scale *= 1.1
     elif acc_rate > 0.75:
@@ -86,7 +86,30 @@ def tune_scale_rwm_table(scale, acc_rate):
     return scale
 
 
-def tune_scale_lmh_table(dt, acc_rate):
+def tune_scale_lmh_table(scale, acc_rate):
+    if acc_rate < 0.001:
+        # reduce by 90 percent
+        return scale * 0.1
+    elif acc_rate < 0.05:
+        # reduce by 50 percent
+        scale *= 0.5
+    elif acc_rate < 0.4:
+        # reduce by ten percent
+        scale *= 0.9
+    elif acc_rate > 0.8:
+        # increase by ten percent
+        scale *= 1.1
+    elif acc_rate > 0.75:
+        # increase by double
+        scale *= 2.0
+    elif acc_rate > 0.95:
+        # increase by factor of ten
+        scale *= 10.0
+
+    return scale
+
+
+def tune_scale_lmh_table_orig(dt, acc_rate):
     """Proposal dt (squared scale for importance sampler) lookup table.
 
     Aims to obtain an acceptance rate between 40-80%.
