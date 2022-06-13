@@ -354,7 +354,7 @@ class NQS:
                 grads_h_bias = []
                 grads_kernel = []
                 steps_before_optimize = batch_size
-
+                '''
                 if early_stopping:
                     v_bias_converged = np.allclose(v_bias,
                                                    v_bias_old,
@@ -369,16 +369,10 @@ class NQS:
                                                    rtol=rtol,
                                                    atol=atol)
 
-                    if v_bias_converged:
-                        print("v_bias converged")
-                    if h_bias_converged:
-                        print("h_bias converged")
-                    if kernel_converged:
-                        print("kernel converged")
-
                     if v_bias_converged and h_bias_converged and kernel_converged:
                         did_early_stop = True
                         break
+                '''
 
         # early stop flag activated
         if did_early_stop:
