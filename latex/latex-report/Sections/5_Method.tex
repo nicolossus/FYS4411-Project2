@@ -16,9 +16,7 @@ Theory and description of of both brute-force and the Metropolis-Hastings algori
 
 Our gradient decent approach can also be found in our previous work. In principle, we have as many datapoints as we want depending on what we want to simulate. We will therefore use Stochastic Gradient Decent (Optimization) approaches to find upper limit of numerically with a few monte carlo cycles. Although a SGD could provide us with decent results, it is not adequate enough for a variational problem depending on multiple parameters like in this project. We will the implement a momentumbased SGD and ADAM. 
 
-Unlike previously, we will treat the local energy, $E_L$ as the cost and differentiate with regard to the variational parameter, $\alpha$. In order to obtain the wave function that is an eigenstate of the ground state energy, we will tune the $\alpha$ value containing the RBM parameters. 
-
- only now $α$ contains the RBM parameters that we need to tune in order to obtain a wave function that is an eigenstate of the ground state energy.  Meaning, the premise is still the same  but  we  are  working  with  multiple  variational parameters, namely the visible and hidden biases and the weights of the neural network.
+Unlike previously, we will treat the local energy, $E_L$ as the cost and differentiate with regard to the variational parameter, $\alpha$. In order to obtain the wave function that is an eigenstate of the ground state energy, we will tune the $\alpha$ value containing the RBM parameters. In general, the premise is the same, except that we are working with multiple parameters, being visible and hidden weights and biases of the RBM.  
 
 \subsubsection{ADAM}
 In addition of keeping track of the running average of the first momentum, in ADAM (short for ADAptive Momentestimation) the same is done for the second moment of the gradient. 
