@@ -2,3 +2,59 @@
 \section{Appendix}\label{sec:Appendix A}
 %================================================================
 
+%----------------------------------------------------------------
+\subsection{Derivations of local energy and gradients}
+%----------------------------------------------------------------
+
+We want the NQS marginal probability distribution over the visible layer to mimic the wave function (alternatively, the square of the wave function). Therefore, 
+\begin{equation*}
+    p(\bm{x}) = \sum_{j=1}^N \frac{\mathrm{e}^{-\frac{1}{T}E\qty(\bm{x}, \bm{h})}}{Z}, 
+\end{equation*}
+will act as our trial wave function, $\Psi_T(\bm{x})$. For a Gaussian-Binary RBM, the marginal PDF can be expanded into
+\begin{equation*}
+    \Psi_T(\bm{x}) = \frac{\mathrm{e}^{-\frac{\norm{\bm{x}-\bm{a}}^2}{2\sigma^2}}}{Z}\prod_j^N \qty(1 + \mathrm{e}^{b_j + \qty[\frac{\bm{x}}{\sigma^2}]^T W_{*j}}). 
+\end{equation*}
+To compute the kinetic energy of the system ($K$), we will apply the formula 
+\begin{equation*}
+    K = -\frac{1}{2}\sum_i^M \qty(\qty(\pdv{\ln{\Psi}}{x_i})^2 + \pdv[2]{\ln{\Psi}}{x_i}), 
+\end{equation*}
+which is derived in \citep{project1}. The trial wave function in the logarithmic domain is 
+\begin{equation*}
+    \ln{\Psi_T\qty(\bm{x})} = -\frac{\norm{\bm{x}-\bm{a}}^2}{2\sigma^2} + \sum_j^N \ln{\qty(1+\mathrm{e}^{b_j + \qty[\frac{\bm{x}}{\sigma^2}]^T W_{*j}})} - \ln{Z}, 
+\end{equation*}
+and thus the first partial derivative with respect to input $x_i$ becomes 
+\begin{align}
+    \pdv{\ln{\Psi_T\qty(\bm{x})}}{x_i} &= -\frac{x_i-a_i}{\sigma^2} + \sum_j^N\frac{W_{ij}}{\sigma^2}\qty(\frac{\mathrm{e}^{b_j + \qty[\frac{\bm{x}}{\sigma^2}]^T W_{*j}}}{1+\mathrm{e}^{b_j + \qty[\frac{\bm{x}}{\sigma^2}]^T W_{*j}}}) \\
+    &= -\frac{x_i-a_i}{\sigma^2} + \sum_j^N\frac{W_{ij}}{\sigma^2}\frac{1}{\mathrm{e}^{-b_j-\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}}+1}, 
+\end{align}
+while the second partial derivative is
+\begin{align}
+    \pdv[2]{\ln{\Psi_T\qty(\bm{x})}}{x_i} &= -\frac{1}{\sigma^2} + \sum_j^N \frac{W_{ij}^2}{\sigma^4} \frac{\mathrm{e}^{-b_j-\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}}}{\qty(\mathrm{e}^{-b_j-\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}} + 1)^2} \\
+   &= -\frac{1}{\sigma^2} + \frac{1}{\sigma^4}\sum_j^N W_{ij}^2 \frac{\mathrm{e}^{b_j+\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}}}{\qty(1 + \mathrm{e}^{b_j+\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}})^2}. 
+\end{align}
+The local energy can then be calculated, $E_L = K + P$, where the potential $P$ depends on the system. We perform our calculations in an isotropic harmonic oscillator with an angular frequency $\omega$ and, if the particles are interacting, a Coulomb interacting potential between the electrons, such that the local energy becomes 
+\begin{equation}
+    E_L = \frac{1}{2}\sum_i^M\qty(-\qty[\pdv{\ln{\Psi_T}}{x_i}]^2-\pdv[2]{\ln{\Psi_T}}{x_i} + \omega x_i^2) + \sum_{k<l}\frac{1}{r_{kl}},  
+\end{equation}
+where $r_{kl}$ is the Euclidian distance between particle $k$ and $j$ in configuration space. 
+\subsubsection{Gradients needed for GD update.}
+We also need the gradients with respect to the bias of the visible layer, $\bm{a}$, to be able to use a GD approach in the update of the parameters. We need to find the gradient with respect to the expectation value of the energy yielded by the Monte Carlo method applied. The gradient of the expectation value of the energy with respect to an arbitrary parameter $\bm{\lambda}$ is derived in \citep{project1} and is 
+\begin{equation}\label{eq:update_rule}
+    \grad_{\bm{\lambda}}\expval{E} = 2\qty(\expval{E\grad_{\bm{\lambda}}\ln{\Psi_T}} - \expval{E}\expval{\grad_{\bm{\lambda}}\Psi_T}). 
+\end{equation}
+To evaluate the gradient of the expectation value of the energy, we need the gradient with respect to the trainable parameter. We therefore need the gradient with respect to the bias of the visible layer, the bias of the hidden layer and the interactions between these layers, the kernel weights. 
+
+The gradient of the trial wave function with respect to the bias of the visible layer, $\bm{a}$, is 
+\begin{equation}
+    \grad_{\bm{a}}\ln{\Psi_T} = \frac{\norm{\bm{x}-\bm{a}}}{\sigma^2}, 
+\end{equation}
+and for the hidden layer bias it is 
+\begin{align}
+    \grad_{\bm{b}}\ln{\Psi_T} &= \frac{\mathrm{e}^{\bm{b} + \frac{1}{\sigma^2}\bm{x}^T W}}{\qty(1+\mathrm{e}^{\bm{b} + \frac{1}{\sigma^2}\bm{x}^T W})} \\
+    &= \frac{1}{\qty(\mathrm{e}^{-\bm{b} - \frac{1}{\sigma^2}\bm{x}^T W}+1)}. 
+\end{align}
+For the kernel weights we find the gradients of the trial wave function to be 
+\begin{equation}
+    \grad_{W}\ln{\Psi_T} = \frac{\bm{x}}{\sigma^2\qty(\mathrm{e}^{-\bm{b}-\frac{1}{\sigma^2}\bm{x}^T W}+1)}, 
+\end{equation}
+which is $N$ gradients of length $M$. The expectation value of the gradients along with the expectation value of the gradients times the local energy is used to find the gradient of the expectation value of the energy, as shown in \autoref{eq:update_rule}.
