@@ -696,6 +696,14 @@ class NQS:
         return new_state
 
     @property
+    def scale(self):
+        return self._scale
+
+    @scale.setter
+    def scale(self, value):
+        self._scale = value
+
+    @property
     def results(self):
         try:
             return self._results
