@@ -14,8 +14,8 @@ from pathos.pools import ProcessPool
 from tqdm.auto import tqdm
 
 from ..utils import (block, check_and_set_nchains, early_stopping,
-                    generate_seed_sequence, setup_logger, tune_dt_table,
-                    tune_scale_table)
+                     generate_seed_sequence, setup_logger, tune_dt_table,
+                     tune_scale_table)
 from .state import State
 
 warnings.filterwarnings("ignore", message="divide by zero encountered")
@@ -58,7 +58,9 @@ class BaseVMC:
         self._logp_fn = self._wf.logprob
         self._locE_fn = self._wf.local_energy
         self._driftF_fn = self._wf.drift_force
-        self._grad_alpha_fn = self._wf.grad_alpha
+        self._grad_v_bias_fn = self._wf.grad_v_bias
+        self._grad_h_bias_fn = self._wf.grad_h_bias
+        self._grad_kernel_fn = self._wf.grad_kernel
 
     def _check_inference_scheme(self, inference_scheme):
         if inference_scheme is None:
@@ -120,7 +122,7 @@ class BaseVMC:
             self.logger = None
 
     @abstractmethod
-    def step(self, state, alpha, **kwargs):
+    def step(self, state, v_bias, h_bias, kernel, **kwargs):
         """Single sampling step.
 
         To be overwritten by subclass. Signature must be as shown in the
@@ -134,22 +136,22 @@ class BaseVMC:
         self,
         nsamples,
         initial_positions,
-        alpha,
+        v_bias,
+        h_bias,
+        kernel,
         nchains=1,
         seed=None,
-        tune=True,
-        tune_iter=10000,
-        tune_interval=500,
-        tol_tune=1e-5,
         optimize=True,
         max_iter=50000,
         batch_size=500,
         gradient_method='adam',
         eta=0.01,
         tol_optim=1e-5,
+        tune=True,
+        tune_iter=10000,
+        tune_interval=500,
+        tol_tune=1e-5,
         early_stop=True,
-        warm=False,          # Deprecate: Does not add any benefit to sampling
-        warmup_iter=5000,    # Deprecate
         log=True,
         logger_level="INFO",
         **kwargs
@@ -162,8 +164,12 @@ class BaseVMC:
             Number of energy samples to obtain
         initial_positions : array_like
             Initial points in configuration space
-        alpha : float or array_like
-            Variational parameter.
+        v_bias : float or array_like
+            (Initial) visible bias.
+        h_bias : float or array_like
+            (Initial) hidden bias.
+        kernel : float or array_like
+            (Initial) weight matrix.
         nchains: int
             Number of Markov chains
         seed : int, optional
@@ -213,12 +219,6 @@ class BaseVMC:
         # Logger
         self._initialize_logger(log, logger_level, nchains)
 
-        # Settings for tuning
-        self._tune = tune
-        self._tune_iter = tune_iter
-        self._tune_interval = tune_interval
-        self._tol_tune = tol_tune
-
         # Settings for optimize
         self._optimize = optimize
         self._max_iter = max_iter
@@ -226,12 +226,14 @@ class BaseVMC:
         self._gradient_method = gradient_method
         self._tol_optim = tol_optim
 
+        # Settings for tuning
+        self._tune = tune
+        self._tune_iter = tune_iter
+        self._tune_interval = tune_interval
+        self._tol_tune = tol_tune
+
         # Flag for early stopping
         self._early_stop = early_stop
-
-        # Settings for warm-up
-        self._warm = warm
-        self._warmup_iter = warmup_iter
 
         # Set and run chains
         nchains = check_and_set_nchains(nchains, self.logger)
@@ -241,7 +243,9 @@ class BaseVMC:
             chain_id = 0
             self._final_state, results, self._energies = self._sample(nsamples,
                                                                       initial_positions,
-                                                                      alpha,
+                                                                      v_bias,
+                                                                      h_bias,
+                                                                      kernel,
                                                                       eta,
                                                                       seeds[0],
                                                                       chain_id,
@@ -267,9 +271,19 @@ class BaseVMC:
                                                     "nsamples")
             initial_positions = self._check_initial_positions(initial_positions,
                                                               nchains)
-            alpha = self._check_and_set_iterable(alpha,
-                                                 nchains,
-                                                 "alpha")
+
+            """
+            THIS MUST BE FIXED TO RUN IN PARALLEL
+            - implement checks similar to the one for initial positions for
+                * v_bias
+                * h_bias
+                * kernel
+            - the expected shape given a single instance should be easy to check
+            """
+            v_bias = self._check_and_set_iterable(v_bias,
+                                                  nchains,
+                                                  "v_bias")
+
             eta = self._check_and_set_iterable(eta,
                                                nchains,
                                                "eta")
@@ -302,9 +316,9 @@ class BaseVMC:
 
         # Some trickery to get this to work with multiprocessing
         if not kwargs:
-            nsamples, initial_positions, alpha, eta, seed, chain_id, kwargs = args
+            nsamples, initial_positions, v_bias, h_bias, kernel, eta, seed, chain_id, kwargs = args
         else:
-            nsamples, initial_positions, alpha, eta, seed, chain_id = args
+            nsamples, initial_positions, v_bias, h_bias, kernel, eta, seed, chain_id = args
 
         # Set some flags and counters
         actual_tune_iter = 0
@@ -313,12 +327,19 @@ class BaseVMC:
         subtract_iter = 0
 
         # Set initial state
-        state = self.initial_state(initial_positions, alpha)
+        state = self.initial_state(initial_positions, v_bias, h_bias, kernel)
+
+        """
+        SHOULD TUNE AND OPTIMIZE RUN CONCURRENTLY?
+        - Remember to fix counter when/if changing order
+        """
 
         # Tune?
         if self._tune:
             state, kwargs = self.tune_selector(state,
-                                               alpha,
+                                               v_bias,
+                                               h_bias,
+                                               kernel,
                                                seed,
                                                chain_id,
                                                **kwargs
@@ -329,7 +350,9 @@ class BaseVMC:
         # Optimize?
         if self._optimize:
             state, alpha = self.optimizer(state,
-                                          alpha,
+                                          v_bias,
+                                          h_bias,
+                                          kernel,
                                           eta,
                                           seed,
                                           chain_id,
@@ -337,20 +360,12 @@ class BaseVMC:
                                           )
             actual_optim_iter += state.delta - subtract_iter
 
-        # Warm-up?
-        if self._warm:
-            state = self.warmup_chain(state,
-                                      alpha,
-                                      seed,
-                                      chain_id,
-                                      **kwargs
-                                      )
-            actual_warm_iter += self._warmup_iter
-
         # Sample energy
         state, energies = self.sample_energy(nsamples,
                                              state,
-                                             alpha,
+                                             v_bias,
+                                             h_bias,
+                                             kernel,
                                              seed,
                                              chain_id,
                                              **kwargs
@@ -359,9 +374,10 @@ class BaseVMC:
         results = self._accumulate_results(state,
                                            energies,
                                            nsamples,
-                                           alpha,
+                                           v_bias,
+                                           h_bias,
+                                           kernel,
                                            eta,
-                                           actual_warm_iter,
                                            actual_tune_iter,
                                            actual_optim_iter,
                                            chain_id,
@@ -377,7 +393,6 @@ class BaseVMC:
         nsamples,
         alpha,
         eta,
-        warm_cycles,
         tune_cycles,
         optim_cycles,
         chain_id,
@@ -424,63 +439,27 @@ class BaseVMC:
                    "total_cycles": state.delta,
                    "tuning_cycles": tune_cycles,
                    "optimize_cycles": optim_cycles,
-                   "warmup_cycles": warm_cycles
                    }
 
         return results
 
-    def initial_state(self, initial_positions, alpha):
+    def initial_state(self, initial_positions, v_bias, h_bias, kernel,):
         state = State(initial_positions,
-                      self._logp_fn(initial_positions, alpha),
+                      self._logp_fn(initial_positions, v_bias, h_bias, kernel),
                       0,
                       0
                       )
         return state
 
-    def warmup_chain(self, state, alpha, seed, chain_id, **kwargs):
-        """Warm-up the chain for warmup_iter cycles.
-
-        Arguments
-        ---------
-        warmup_iter : int
-            Number of cycles to warm-up the chain
-        State : vmc_numpy.State
-            Current state of the system
-        alpha : float
-            Variational parameter
-        **kwargs
-            Arbitrary keyword arguments are passed to the step method
-
-        Returns
-        -------
-        State
-            The state after warm-up
-        """
-
-        if self._log:
-            t_range = tqdm(range(self._warmup_iter),
-                           desc=f"[Warm-up progress] Chain {chain_id+1}",
-                           position=chain_id,
-                           leave=False,
-                           colour='green')
-        else:
-            t_range = range(self._warmup_iter)
-
-        for _ in t_range:
-            state = self.step(state, alpha, seed, **kwargs)
-
-        if self._log:
-            t_range.clear()
-
-        return state
-
-    def tune_selector(self, state, alpha, seed, chain_id, **kwargs):
+    def tune_selector(self, state, v_bias, h_bias, kernel, seed, chain_id, **kwargs):
         """Select appropriate tuning procedure"""
 
         if self._inference_scheme == "Random Walk Metropolis":
             scale = kwargs.pop("scale")
             state, new_scale = self.tune_scale(state,
-                                               alpha,
+                                               v_bias,
+                                               h_bias,
+                                               kernel,
                                                seed,
                                                scale,
                                                chain_id,
@@ -490,7 +469,9 @@ class BaseVMC:
             dt = kwargs.pop("dt")
 
             state, new_dt = self.tune_dt(state,
-                                         alpha,
+                                         v_bias,
+                                         h_bias,
+                                         kernel,
                                          seed,
                                          dt,
                                          chain_id,
@@ -503,7 +484,7 @@ class BaseVMC:
 
         return state, kwargs
 
-    def tune_scale(self, state, alpha, seed, scale, chain_id, **kwargs):
+    def tune_scale(self, state, v_bias, h_bias, kernel, seed, scale, chain_id, **kwargs):
         """For samplers with scale parameter."""
 
         if self._log:
@@ -522,7 +503,8 @@ class BaseVMC:
         state = State(state.positions, state.logp, 0, state.delta)
 
         for i in t_range:
-            state = self.step(state, alpha, seed, scale=scale, **kwargs)
+            state = self.step(state, v_bias, h_bias, kernel,
+                              seed, scale=scale, **kwargs)
             steps_before_tune -= 1
 
             if steps_before_tune == 0:
@@ -549,7 +531,7 @@ class BaseVMC:
 
         return state, scale
 
-    def tune_dt(self, state, alpha, seed, dt, chain_id, **kwargs):
+    def tune_dt(self, state, v_bias, h_bias, kernel, seed, dt, chain_id, **kwargs):
         """For samplers with dt parameter."""
 
         if self._log:
@@ -568,7 +550,8 @@ class BaseVMC:
         state = State(state.positions, state.logp, 0, state.delta)
 
         for i in t_range:
-            state = self.step(state, alpha, seed, dt=dt, **kwargs)
+            state = self.step(state, v_bias, h_bias,
+                              kernel, seed, dt=dt, **kwargs)
             steps_before_tune -= 1
 
             if steps_before_tune == 0:
@@ -595,7 +578,7 @@ class BaseVMC:
 
         return state, dt
 
-    def optimizer(self, state, alpha, eta, seed, chain_id, **kwargs):
+    def optimizer(self, state, v_bias, h_bias, kernel, eta, seed, chain_id, **kwargs):
         """Optimize alpha
         """
 
@@ -613,9 +596,15 @@ class BaseVMC:
             beta1 = 0.9
             beta2 = 0.999
             epsilon = 1e-8
-            m = 0
-            v = 0
-            t = 0
+            m_v_bias = 0
+            v_v_bias = 0
+            t_v_bias = 0
+            m_h_bias = 0
+            v_h_bias = 0
+            t_h_bias = 0
+            m_kernel = 0
+            v_kernel = 0
+            t_kernel = 0
 
         # Set initial config
         steps_before_optimize = self._batch_size
@@ -623,7 +612,7 @@ class BaseVMC:
         grad_alpha = []
 
         for i in t_range:
-            state = self.step(state, alpha, seed, **kwargs)
+            state = self.step(state, v_bias, h_bias, kernel, seed, **kwargs)
             energies.append(self._locE_fn(state.positions, alpha))
             grad_alpha.append(self._grad_alpha_fn(state.positions, alpha))
             steps_before_optimize -= 1
