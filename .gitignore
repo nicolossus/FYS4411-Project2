@@ -10,6 +10,9 @@
 *.x
 .cache
 .pytest_cache
+Nqs_src
+notes.md
+dev/
 
 ### C ###
 # Prerequisites
