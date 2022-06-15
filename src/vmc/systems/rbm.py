@@ -41,9 +41,10 @@ class RBMWF(BaseRBM):
         ---------
         A scalar value representing the NQS wave function.
         """
-        gaussian = 0.25*(r-self._a)**2
+        x_v = np.linalg.norm(r-self._a)
+        gaussian = 0.25/(self._sigma2)*x_v**2
         Q = self._Q(r)
-        return -np.sum(gaussian)+0.5*np.sum(np.log(Q))
+        return -(gaussian)+0.5*np.sum(np.log(Q))
 
 
     def _gradient(self, r):
@@ -85,14 +86,14 @@ class RBMWF(BaseRBM):
         """
         gaussian_grad2 = -0.5
         Q = self._Q(r)
-        numerator = np.exp(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
+        numerator = np.exp(self._b + np.einsum("ij, ijk->k")/self._sigma2) 
         Wsquared = self._W**2 # (n, d, h)
         # Summing over all dimensions for the
         #num = np.transpose((numerator/(Q*Q)), axes=(0, 2, 1))
         #print("Shape num: ", num.shape)
-        prod_term2 = 0.5*Wsquared*((numerator)/(Q**2))
+        prod_term2 = 0.5*Wsquared*((numerator)/(Q**2))/(self._sigma2)
         prod_term2 = np.sum(prod_term2, axis=2)
-        return np.sum((gaussian_grad2 + prod_term2))
+        return np.sum((gaussian_grad2 + prod_term2))/self._sigma2
 
     def _laplacian(self, r):
         """
@@ -185,10 +186,10 @@ class RBMWF(BaseRBM):
         An np.ndarray(shape=(n_hidden)) value corresponding to
                     (1 + e^{b+rW/s^2})
         """
-        Q =  self._softplus(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
-        print("New Q: ", np.exp(Q))
-        Q = 1 + np.exp(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
-        print("Old Q: ", Q)
+        Q =  np.exp(self._softplus(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2))
+        #print("New Q: ", Q)
+        #Q = 1 + np.exp(self._b + np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
+        #print("Old Q: ", Q)
 
         return Q
 
@@ -203,10 +204,7 @@ class RBMWF(BaseRBM):
         ---------
         np.ndarray(shape=(n_hidden))
         """
-        denominator = self._softplus(-self._b - np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
-        print("New denom: ", np.exp(denominator))
-        denominator = 1 + np.exp(-self._b - np.einsum("ij, ijk->k", r, self._W)/self._sigma2)
-        print("Old denom: ", denominator)
+        denominator = np.exp(self._softplus(-self._b - np.einsum("ij, ijk->k", r, self._W)/self._sigma2))
         return denominator
 
     def local_energy(self, r):

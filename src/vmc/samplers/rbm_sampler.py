@@ -42,7 +42,7 @@ class BaseRBMVMC:
         Random number generator. Default: numpy.random.default_rng
     """
 
-    def __init__(self, wavefunction, inference_scheme=None, rng=None, update_method="gd"):
+    def __init__(self, wavefunction, inference_scheme=None, rng=None, update_method="adam"):
 
         #self._check_inference_scheme(inference_scheme)
 
