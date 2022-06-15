@@ -5,20 +5,22 @@
 %----------------------------------------------------------------
 \subsection{Previous work}\label{sec:project method}
 %----------------------------------------------------------------
-This project is a continuation of our past work and will along with the theory presented above also include the methods presented in this section.
+This project is a continuation of our past work \citep{project1} and will along with the theory presented above also include the methods presented in this section.
 
 \subsection{Variational Monte Carlo}
 % Former latter
-Theory and description for both our Monte Carlo approaches, brute-force and importance sampling, can be accessed through our previous work \citep{project1}. The variational part of this project, i.e approximating the upper bound for the ground state energy of our system, will be based on our previous findings and analysis. In short, our results showed that the importance sampling implementation yielded the most accurate results and we will therefore use it as the basis four our VMC approach alongside the RBM. The importance sampling approach requires relatively few numbers of monte carlo cycles, $M$, for it to yield sufficient results, even for more complex systems than studied here. From our analysis, we noted that the optimal step size was $\Delta t = ?$
+Theory and description for both our Monte Carlo approaches, brute-force and importance sampling, can be accessed through our previous work \citep{project1}. The variational part of this project, i.e approximating the upper bound for the ground state energy of our system, will be based on our previous implementation. In short, our results showed that the importance sampling implementation yielded the most accurate sampling results. The importance sampling approach requires relatively few numbers of MC cycles, $M$, for it to yield sufficient results, even for more complex systems than studied here. 
 
-\subsection{Stochastic Gradient Decent}
+%----------------------------------------------------------------
+\subsection{Gradient-based optimization}
+%----------------------------------------------------------------
 %Our gradient decent approach can also be found in our previous work. We refrained from implementing a Stochastic Gradient Decent scheme as we simply do not have an abundance with datapoints to work with.
 
-Our gradient decent approach can also be found in our previous work. In principle, we have as many datapoints as we want depending on what we want to simulate. We will therefore use Stochastic Gradient Decent (Optimization) approaches to find upper limit of numerically with different number of MC cycles. Although a SGD could provide us with decent results, it is not adequate enough for a variational problem depending on multiple parameters like in this project. We will the implement a momentumbased SGD and ADAM. 
+Our gradient descent approach can also be found in our previous work \citep{project1}. In principle, we have as many datapoints as we want to generate. We will therefore use a Stochastic Gradient Descent (SGD) approach to find the upper limit of ground state energy. Although a basic SGD could provide us with decent results, we have implemented a standard gradient descent and ADAM, and the ADAM optimizer is what we utilize in the our optimization runs. 
 
-Unlike previously, we will treat the local energy, $E_L$ as the cost and differentiate with regard to the variational parameter, $\alpha$. In order to obtain the wave function that is an eigenstate of the ground state energy, we will tune the $\alpha$ value containing the RBM parameters. In general, the premise is the same, except that we are working with multiple parameters, being visible and hidden weights and biases of the RBM. 
+Unlike previously, we will treat the local energy, $E_L$ as the cost and differentiate with regard to the variational parameters, $\bm{\lambda}$. In order to obtain the wave function that is an eigenstate of the ground state energy, we will optimize the $\bm{\lambda}$ value containing the RBM parameters. In general, the premise is the same as in our previous work, except that we are working with multiple parameters, being the biases of the visible and hidden layers, and the weights of the interactions between them, of the RBM. 
 
-The gradient of the loss funciton, in our case the expectation value of the energy, with respect to an arbitrary parameter, $\bm{\lambda}$, of the RBM is given by
+The gradient of the loss function, in our case the expectation value of the energy, with respect to an arbitrary parameter, $\bm{\lambda}$, of the RBM is given by
 \begin{equation*}
     %C_i = \gradient \left \langle E_L(\mathbf{\alpha}_i) \right \rangle
     \grad_{\bm{\lambda}}\expval{E} = \grad_{\bm{\lambda}}\expval{E\qty(\bm{\lambda})}
@@ -29,18 +31,81 @@ For every step, displaying the standard gradient descent method, we update the v
 \begin{equation*}
     \bm{\lambda}_{k+1} =  \bm{\lambda}_k - \eta \grad_{\bm{\lambda}_k}\expval{E(\bm{\lambda}_k} \qquad \text{for} \,\, k \geq 0, 
 \end{equation*}
-where $\bm{\lambda}_k$ and $\bm{\lambda}_{k+1}$ represent the $k$th and ($k+1$)th values of $\bm{\lambda}$ respectively. This procedure is repeated until we get convergence (minimization in the cost function) for all trainable parameters.
-
+where $\bm{\lambda}_k$ and $\bm{\lambda}_{k+1}$ represent the $k$th and ($k+1$)th values of the trainable parameters, respectively. This procedure is repeated until we get convergence (minimization in the cost function) for all trainable parameters.
+%----------------------------------------------------------------
 \subsection{ADAM}
+%----------------------------------------------------------------
 In addition of keeping track of the running average of the first momentum, the ADAM (ADAptive Momentestimation) algorithm also does the same for the second moment of the gradient. Complete description of this method can be found in our previous work \citep{project1}. 
 
 % Endre navn på C_i
-
+%----------------------------------------------------------------
 \subsection{Blocking}
-In order to find the uncertainty in our sumulations, blocking will be used. The complete outline and mathematical backround of the blocking method used in our implementation, can be found in our previous work \citep{project1} and is based on Jonnson’s work \citep{MariusJonsson}. Error estimation and the blocking implementation here is the same as in our previous work. 
+%----------------------------------------------------------------
+In order to find the sampling error in our energy estimations, blocking will be used. The complete outline and mathematical background of the blocking method used in our implementation, can be found in our previous work \citep{project1} and is based on Jonnson’s work \citep{MariusJonsson}. %Error estimation and the blocking implementation here is the same as in our previous work. 
 
+%----------------------------------------------------------------
+\subsection{Parameters and General Outline}
+%----------------------------------------------------------------
+We have in this project looked at two MCMC methods. The scale parameter Random Walk Metropolis (RWM) and the Langevin Metropolis-Hastings (LMH) algorithm where the former is a brute-force implementation and the latter uses importance sampling. Complete outline of these methods can be found in our previous work \citep{project1}. For the single electron in one-dimension we found a suitable scale parameter for the RWM algorithm used in generating proposal states to be $3.0$, which yielded an acceptance ratio of $\sim 30\%$, while for the LMH algorithm we found the `time-step', scale$=\sqrt{dt}$, to be $1.3$ with an acceptance ratio of $\sim 60\%$. For the system of two interacting particles we used the scale parameters scale$=1.0$ for the RWM algorithm and $scale=1.0$ for the LMH algorithm which yielded, respectively, the acceptance ratios of $\sim 30\%$ and $\sim60\%$. 
 
-\subsection{VMC parameters and general outline}
-We have in this project looked at two \textit{Markov Chain Monte Carlo} (MCMC) methods. The scale parameter \textit{Random Walk Metropolis} (RWM) and the \textit{Langevin Metropolis-Hastings} (LMH) algorithm where the former is a brute-force implementation and the latter uses importance sampling. Complete outline of these methods can be found in our previous work [cite p1]. For the single electron in one-dimension we found a suitable scale parameter for the RWM algorithm used in generating proposal states to be $3.0$, which yielded an acceptance ratio of $\sim 30\%$, while for the LMH algorithm we found the `time-step', scale$=\sqrt{dt}$, to be $1.3$ with an acceptance ratio of $\sim 60\%$. For the system of two interacting particles we used the scale parameters scale$=1.0$ for the RWM algorithm and $scale=1.0$ for the LMH algorithm which yielded, respectively, the acceptance ratios of $\sim 30\%$ and $\sim60\%$. 
+The parameters of the RBM that we will train are the biases of the visible and hidden layers, as well as the weights describing the strength of the connections between the visible and hidden neurons. The biases are initialized according to $\mathrm{N}(\mu=0, \sigma=0.001)$ and the weight matrix, to combat vanishing and exploding gradients, is initialized according to $\mathrm{N} \qty(\mu=0, \sigma=\sqrt{1 / M})$, with $M$ being the number of visible neurons. 
 
 % The scales of the proposal distributions, $\sigma_p$, are set to $\sigma_p=3.0$ and $\sigma_p=1.3$ for the RWM and LMH algorithms, respectively, which give acceptance rates of $\sim 30\%$ and $\sim60\%$, respectively. 
+
+%----------------------------------------------------------------
+\subsection{Overview of the Implementation}
+%----------------------------------------------------------------
+
+We have implemented the discussed formalism in a Python package with a high-level API that can be found here \url{https://github.com/nicolossus/FYS4411-Project2}. The closed-form expressions that are involved in the cost function and the sampling algorithms are written in a highly vectorized manner by using functionality offered by NumPy \citep{numpy}. Furthermore, we have included the possibility of using an automatic differentiation routine by instead using a JAX \citep{jax2018github} backend. The RBM. $F_\mathrm{RBM}(\bm{x})$ can be chosen to represent the wave function either as $\psi (\bm{x}) = F_\mathrm{RBM}(\bm{x}) $ or $\abs{\psi (\bm{x})}^2 = F_\mathrm{RBM}(\bm{x}) \implies \psi (\bm{x}) = \sqrt{F_\mathrm{RBM}(\bm{x})}$. Note that for complex valued wave functions, the only representation that can be used is $\psi (\bm{x}) = F_\mathrm{RBM}$. Even though this flexibility in representation is incorporated into our package, we will only use the $\psi (\bm{x}) = F_\mathrm{RBM}$ in this study.
+
+
+%The Python code is written in a highly vectorized manner, primarily by using functionality offered by NumPy \citep{numpy} and JAX. The VMC framework has implementations of all the methods previously discussed. We have implemented a base class for a sampler with all methods except for the specific sampling step of an algorithm. Both the RWM and LMH sampler then inherits the base class and only needs to implement one step of the respective algorithm. Our VMC sampler have three phases; (i) tuning phase, (ii) optimization phase, and (iii) sampling phase. In the tuning phase, the sampler searches for the optimal scale parameter. Similarly, in the optimization phase, the sampler searches for the optimal variational parameter. Finally, in the sampling phase the sampler obtains energy samples used to compute the expectation value. \cref{lst:vmc} outlines the interface of our VMC framework with explanatory comments included. The \cw{sample} method, in particular, is designed to be flexible and let the user adjust the sampler's knobs. 
+
+\begin{lstlisting}[language=python, label={lst:vmc}, caption={Example usage of the NQS framework.}]
+import nqs
+
+# Config
+nparticles = 1    # number of particles
+dim = 1           # dimensionality
+nhidden = 2       # hidden neurons
+scale = 3.0       # Scale of proposal distribution
+sigma2 = 1.0      # Variance of Gaussian layer in the RBM
+
+# Instantiate the model
+system = nqs.NQS(nparticles,
+                 dim,
+                 nhidden=nhidden,
+                 interaction={False, True},  # Repulsion or not
+                 mcmc_alg={'rwm', 'lmh'},    # MCMC algorithm
+                 nqs_repr={'psi', 'psi2'},   # RBM representation
+                 backend={'numpy', 'jax'}    # Closed-form or AD
+                 log=True,                   # Show logger?
+                 logger_level="INFO",        # Logging level (see docs)
+                 rng=None                    # Set RNG engine (optional)
+                 )
+
+# Initialize parameters; biases and weight matrix are set automatically
+system.init(sigma2=sigma2, scale=scale)
+
+# Train the model
+system.train(max_iter=500_000,                # No. of training iterations
+             batch_size=1_000,                # No. samples used in one update
+             gradient_method={'gd', 'adam'},  # Optimization algorithm
+             eta=0.05,                        # Learning rate
+             beta1=0.9,                       # ADAM hyperparameter
+             beta2=0.999,                     # ADAM hyperparameter
+             epsilon=1e-8,                    # ADAM hyperparameter
+             mcmc_alg=None,                   # Set MCMC algo. (optional)
+             seed=None                        # Set for reproducibility
+             )
+
+# Sample variational energy
+df = system.sample(int(2**18),                # No. of energy samples
+                   nchains=4,                 # No. of Markov chains
+                   mcmc_alg=None,             # Set MCMC algo. (optional)
+                   seed=None                  # Set for reproducibility
+                   )
+
+# Results are returned in a pandas.DataFrame. Save directly with
+system.to_csv('filename.csv')
+\end{lstlisting}

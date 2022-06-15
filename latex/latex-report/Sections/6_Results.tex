@@ -13,22 +13,22 @@ We start with the simplest system of a single one-dimensional quantum dot, i.e.,
 \subsubsection*{The Effect of the Learning Rate}
 %----------------------------------------------------------------
 
-\autoref{fig:train_iter_lr_batch1000} shows the effect of the learning rate $\eta$ with different numbers of training iterations. The training, or update of parameters, are done in batches of 1000 iterations, meaning that the x-axis tick labels correspond to the number of updates during training. Each point is the average of 8 Markov chains, each with expectation value of the energy, $\langle E \rangle$, the sampling error, $\sigma_b$, found via the blocking method, and the variance $\mathrm{Var}(E)$. In the figure, we show both results obtained by using RWM and LMH sampling algorithms which are color coded as blue and orange, respectively. Although not visible in most plots, the shaded areas around the points are the standard error of the means computed across the Markov chains. From the figure we see that $\eta=0.5$ is the fastest to converge, in a descending manner, to minimum values for all quantities, i.e., $\langle E \rangle$, $\sigma_b$ and $\mathrm{Var}(E)$, with both the RWM and LMH sampler. Keeping in mind the different scales in the plots, the smaller learning rates also are able to achieve accurate minimum values of the quantities, although with a detour toward ascending estimates. The take-away message is that the gradient descent optimization of the RBM parameters needs a relatively large number of training iterations, or MCMC cycles, in order to converge, and the speed of the convergence depend on the learning rate. Here, we have only carried out an extremely coarse search for the optimal learning rate, and a different learning rate might have faster convergence properties for this particular system. 
+In the following we use a RBM with 2 hidden neurons. \autoref{fig:train_iter_lr_batch1000} shows the effect of the learning rate $\eta$ with different numbers of training iterations. The training, or update of parameters, are done in batches of 1000 iterations, meaning that the x-axis tick labels correspond to the number of updates during training. Each point is the average of 8 Markov chains, each with expectation value of the energy, $\langle E \rangle$, the sampling error, $\sigma_b$, found via the blocking method, and the variance $\mathrm{Var}(E)$. In the figure, we show both results obtained by using RWM and LMH sampling algorithms which are color coded as blue and orange, respectively. Although not visible in most plots, the shaded areas around the points are the standard error of the means computed across the Markov chains. From the figure we see that $\eta=0.5$ is the fastest to converge, in a descending manner, to minimum values for all quantities, i.e., $\langle E \rangle$, $\sigma_b$ and $\mathrm{Var}(E)$, with both the RWM and LMH sampler. Keeping in mind the different scales in the plots, the smaller learning rates also are able to achieve accurate minimum values of the quantities, although with a detour toward ascending estimates. The take-away message is that the gradient descent optimization of the RBM parameters needs a relatively large number of training iterations, or MCMC cycles, in order to converge, and the speed of the convergence depend on the learning rate. Here, we have only carried out an extremely coarse search for the optimal learning rate, and a different learning rate might have faster convergence properties for this particular system. 
 
 \begin{figure}[!htb]
 \begin{center}\includegraphics[width=\textwidth]{latex/figures/training_cycles_lr_batch1000.pdf}
 \end{center}
-\caption{The effect of the learning rate $\eta$, with the different values stated in each column's title, and the number of training iterations.   The solid lines indicates the average expected value over the $8$ chains, while the shaded region denotes the standard error of the mean. The blue lines and regions display the results from the RWM algorithm, while the orange lines show the corresponding results from the LMH algorithm.
+\caption{The effect of the learning rate $\eta$, with the different values stated in each column's title, and the number of training iteration. Each point is the mean across 8 Markov chains, and the shaded areas (generally not visible) the standard error of the mean. The figure shows the expectation value of the energy, $\langle E \rangle$, the sampling error, $\sigma_b$, found via the blocking method, and the variance $\mathrm{Var}(E)$. The blue lines and regions display the results from the RWM algorithm, while the orange lines show the corresponding results from the LMH algorithm. The training, or update of parameters, are done in batches of 1000 iterations, meaning that the x-axis tick labels correspond to the number of updates during training, or epochs.
 }
 \label{fig:train_iter_lr_batch1000}
 \end{figure}
 
-\autoref{fig:train_iter_lr_batch5000} is similar to the preceding figure, only here the update of parameters are done in batches of $5\,000$ training iterations. The rationale behind using a larger batch size is that the expectation values are then estimated from a larger sample size, thus increasing the accuracy of the estimate.
+\autoref{fig:train_iter_lr_batch5000} is similar to the preceding figure, only here the update of parameters are done in batches of $5\,000$ training iterations. The rationale behind using a larger batch size is that the expectation values are then estimated from a larger sample size, thus increasing the accuracy of the estimate. With the same number of total training iterations as in \autoref{fig:train_iter_lr_batch1000} for each point, the increased batch size means that the number of updates during training is reduced correspondingly. We again see the fastest convergence with $\eta=0.5$, and that neither of smaller learning rates seem to have converged in terms of minimum values across all quantities, $\langle E \rangle$, $\sigma_b$ and $\mathrm{Var}(E)$. As such, this result indicates that an increase in batch size for the same number of total training iterations, will make the convergence properties of the optimization procedure more dependent on using an optimal learning rate. However, one should be wary about using to small batch sizes, as then the estimates of the expectation values will be less accurate. Hence, there is a trade-off between estimation accuracy and computational cost we need to take into account when designing the optimization procedure. 
 
 \begin{figure}[!htb]
 \begin{center}\includegraphics[width=\textwidth]{latex/figures/training_cycles_lr.pdf}
 \end{center}
-\caption{The effect of the learning rate $\eta$, with the different values stated in each column's title, and the number of training iterations. See the description in \autoref{fig:train_iter_lr_batch1000} for more details.}
+\caption{The effect of the learning rate $\eta$ and the number of training epochs, here with batches of $5\,000$ samples. See the description in \autoref{fig:train_iter_lr_batch1000} for more details.}
 \label{fig:train_iter_lr_batch5000}
 \end{figure}
 
@@ -39,12 +39,12 @@ We start with the simplest system of a single one-dimensional quantum dot, i.e.,
 %----------------------------------------------------------------
 
 
-\autoref{fig:hidden_neurons_batch_size_extra} displays comparisons of RMBs with different number of hidden neurons, $N_{\mathrm{hidden}}= \qty{1, 2, 3, 4}$, with their calculated energies (upper plots) where the left one is calculated with a batch size of $1,000$ cycles, and the right calculated with a batch size of $5,000$ cycles. The bottom plots shows the corresponding variance in the energy. The optimal number of hidden neurons for the single one-dimensional quantum dot is $2$, where the lowest error for both batch-sizes is. 
+\autoref{fig:hidden_neurons_batch_size_extra} displays comparisons of RMBs with different number of hidden neurons, $N_{\mathrm{hidden}}= \qty{1, 2, 3, 4}$, with their calculated energies (upper plots) where the left one is calculated with a batch size of $1,000$ cycles, and the right calculated with a batch size of $5,000$ cycles. The bottom plots shows the corresponding variance in the energy. The optimal number of hidden neurons for the single one-dimensional quantum dot is $2$, where the lowest error for both batch-sizes is. We find that the best approximation occurs when the batch-size is $1,000$ cycles and using the RWM sampling algorithm. We find the best approximation to the value of the ground state energy to be $E_0 = 0.499999\pm3\cdot10^{-6}$ a.u, which is equal to the analytical ground state energy $E_0= 0.5$ a.u, with a precision of order $10^{-6}$. 
 
 \begin{figure}[!htb]
 \begin{center}\includegraphics[width=\textwidth]{latex/figures/hidden_neurons_batch_size_extra.pdf}
 \end{center}
-\caption{c}
+\caption{Calculated approximation of the ground state energy of the quantum dot in the one-dimensional harmonic oscillator trap against the number of neurons in the hidden layer, for batch-size $1,000$ (left) and $5,000$ right, with their corresponding variances displayed below.}
 \label{fig:hidden_neurons_batch_size_extra}
 \end{figure}
 
@@ -54,12 +54,12 @@ We start with the simplest system of a single one-dimensional quantum dot, i.e.,
 \subsubsection*{Comparing Closed-Form Gradients and Automatic Differentiation}
 %----------------------------------------------------------------
 
-\autoref{fig:runtimes} compares the runtimes of as a function of training iterations for the RWM and LMH algorithms, where calculations are performed using closed-form expressions and an automatic differentiation implementation using JAX \citep{jax2018github}. The difference in the implementations using the closed-form expressions are small, but the RWM algorithm is, as expected, due to fewer calculations in the proposal steps and acceptance probability, a little faster. When comparing with the implementations using autodifferentiation, we observe that the RWM algorithm is approximately a factor of $2$ faster on closed-form, and the LMH algorithm is approximately a factor of $3$ faster on closed-form. 
+\autoref{fig:runtimes} compares the runtimes of as a function of the number of training iterations for the RWM and LMH algorithms, where calculations are performed using closed-form (CF) expressions and an automatic differentiation (AD) implementation using JAX \citep{jax2018github}. The difference in the implementations using the CF expressions are small, but the RWM algorithm is, as expected, due to fewer calculations in the proposal steps and acceptance probability, a little faster. When comparing with the implementations using AD, we observe that the RWM algorithm is approximately a factor of $2$ faster on closed-form, and the LMH algorithm is approximately a factor of $3$ faster on closed-form. 
 
 \begin{figure}[!htb]
 \begin{center}\includegraphics[scale=0.8]{latex/figures/runtimes.pdf}
 \end{center}
-\caption{c}
+\caption{Runtimes against training iterations for four different sampling approaches on the same system. The closed-form (CF) expressions are utilized for calculating the next step using the RWM and LMH sampling algorithms for the lines labeled RWM CF and LMH CF, while the needed gradients are found through automatic differentiation (AD) for the same algorithms for the lines labeled RWM AD and LMH AD.}
 \label{fig:runtimes}
 \end{figure}
 
@@ -69,21 +69,23 @@ We start with the simplest system of a single one-dimensional quantum dot, i.e.,
 \subsection{Interacting Quantum Dots}
 %----------------------------------------------------------------
 
+We now move on to the more interesting case of a system of a couple of two-dimensional electrons with repulsive interactions. 
+
 \autoref{fig:interacting_eta} displays the computed expectation values of the ground state energy against the number of hidden neurons for the two-dimensional system of two interacting quantum dots, for three different learning rates, $\eta\in\qty{0.01, 0.05, 0.5}$ using the RWM sampling algorithm. The optimal values for the learning rate and the number of hidden nodes are $\eta^{*}=0.05$ and with $6$ hidden neurons. For these hyper parameters the calculated ground state energy is found to be $E_0 = 3.059\pm0.008$ a.u. 
 
 \begin{figure}[!htb]
 \begin{center}\includegraphics[width=\textwidth]{latex/figures/interacting_eta.pdf}
 \end{center}
-\caption{c}
+\caption{The effect of the number of neurons in the hidden layer on the approximated upper bound on the ground state energy is plotted for three different learning rates (left plot), while the right plot displays the approximation with a learning rate of $0.05$ after $500$(solid line) and $1000$(dashed line) updates in the training. The RWM sampling algorithm was used for all points.}
 \label{fig:interacting_eta}
 \end{figure}
 
-\autoref{fig:interacting_rwm_vs_lmh} shows a comparisons between the RWM and LMH sampling algorithms 
+\autoref{fig:interacting_rwm_vs_lmh} shows a comparisons between in the calculated expectation values for the ground state energy of the RWM and LMH sampling algorithms against the same number of hidden neurons as in \autoref{fig:interacting_eta}, with a learning rate of $\eta=0.05$. The best approximation to the ground state using the RWM algorithm is $E_0 = 3.059\pm0.008$ a.u, while for the LMH algorithm the best approximation occurs when there are $2$ hidden neurons and yields $E_0 = 3.089\pm0.004$ a.u. The figure shows that the LMH algorithm performs more evenly for different number of hidden neurons, but that RWM has better approximations when the number of hidden neurons are $2, 3, 4, 6$ and $7$. 
 
 \begin{figure}[!htb]
 \begin{center}\includegraphics[width=\textwidth]{latex/figures/interacting_rwm_vs_lmh.pdf}
 \end{center}
-\caption{c}
+\caption{Sampled upper bound approximation to the ground state energy as a function of neurons in the hidden layer for both the RWM and LMH sampling algorithms, with a learning rate of $0.05$ after $500$ updates in the parameters of the RBM.}
 \label{fig:interacting_rwm_vs_lmh}
 \end{figure}
 
@@ -96,8 +98,3 @@ We start with the simplest system of a single one-dimensional quantum dot, i.e.,
 
 
 
-%Cost function - might be beneficial to use a cost function either based on minimizing the variance, Var(E), or on minimizing both $\langle E \rangle$ and Var(E). 
-
-%The training itself is stochastic, and here we train the RBM parameters once, and then sample with the trained parameters with multiple Markov chains. A more rigorous approach would be to compare statistics across multiple training rounds with the same system and initial parameter settings
-
-%Also train/optimize RBM scale

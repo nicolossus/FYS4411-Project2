@@ -2,4 +2,8 @@
 \section{Future Work}\label{sec:Future}
 %================================================================
 
-Flax, deep Boltzmann machines, (Quantum Boltzmann machines? Test with NN)
+It is clear that machine learning approaches have proven themselves to be prominent in computational quantum mechanics and they will undoubtedly keep getting more and more popular in the future. 
+The first step forward that comes to mind would be to analyze more complex systems with more than two particles. But as only two particles can occupy the same state, as we know from the Pauli exclusion principle, we would need to make changes to our implementation. The Gaussian energy function, $E(\mathbf{x}, \mathbf{h})$ is symmetric, but for dimensions of particles greater than two, we need to ensure that the total wave function is anti-symmetric when factoring in spin. Using the theory of Slater determinants together with the Gaussian energy function, could bring a solution to this. Therefore an extension to a general system of fermions would require more complications, and may be a good extension of our NQS trial wave function implementation. But to accomplish this, it would be a good idea to implement deep RBMs as they have the ability to model more complex systems. Or we could all-together drop using RBMs and test with (Deep) Neural Networks and analyze the differences. Besides that, experimenting with other sampling techniques like Gibbs sampling can also be of great interest. With more complex methods comes also a greater price in computational cost.
+
+In our NQS framework we included procedures for automatic differentiation via JAX. We have also implemented an RBM model using the JAX-based machine learning framework Flax, see
+\cw{https://github.com/nicolossus/FYS4411-Project2/blob/main/nqs/models/rbm_flax.py}, which can be used as basis for a flexible (deep) RBM framework in the future. 
