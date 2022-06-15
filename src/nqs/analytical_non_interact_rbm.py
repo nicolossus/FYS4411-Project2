@@ -32,17 +32,20 @@ class AniRBM:
 
         # visible layer
         x_v = np.linalg.norm(r - v_bias)
+        #x_v = r-v_bias
         x_v *= -x_v * self._sigma2_factor2
+        #print("Shape x_v: ", x_v.shape)
 
         # hidden layer
         x_h = self._softplus(h_bias + (r.T @ kernel) * self._sigma2_factor)
         x_h = np.sum(x_h, axis=-1)
-
+        #x_h_x_v = x_v + x_h
+        #print("SHape x_h + x_v: ", x_h_x_v.shape)
         return x_v + x_h
 
     def wf(self, r, v_bias, h_bias, kernel):
         """Evaluate the wave function"""
-        return 0.5 * self._log_rbm(r, v_bias, h_bias, kernel).sum()
+        return 0.5 * self._log_rbm(r, v_bias, h_bias, kernel)#.sum()
 
     def potential(self, r):
         """Potential energy function"""
@@ -84,6 +87,7 @@ class AniRBM:
         #exp_prod = _expos[:, np.newaxis] @ _expit[:, np.newaxis].T
         exp_prod = _expos * _expit
         gr = -self._sigma2_factor2 + self._sigma4_factor * kernel2 @ exp_prod
+        #print(kernel2 @ exp_prod)
         return gr
 
     def _local_kinetic_energy(self, r, v_bias, h_bias, kernel):
@@ -95,6 +99,9 @@ class AniRBM:
         _laplace = self._laplace_wf2(r, v_bias, h_bias, kernel).sum()
         _grad = self._grad_wf(r, v_bias, h_bias, kernel)
         _grad2 = np.sum(_grad * _grad)
+        #print("Laplace: ", _laplace)
+        #print("grad2 : ", _grad2)
+        #print("Laplace + grad2 : ", _laplace + _grad2)
         #_grad2 = _grad * _grad
 
         return -0.5 * (_laplace + _grad2)
@@ -114,18 +121,18 @@ class AniRBM:
     def grad_v_bias(self, r, v_bias, h_bias, kernel):
         """Gradient of wave function w.r.t. visible bias"""
         gr = (r - v_bias) * self._sigma2_factor2
-        return gr.sum()
+        return gr#.sum()
 
     def grad_h_bias(self, r, v_bias, h_bias, kernel):
         """Gradient of wave function w.r.t. hidden bias"""
         gr = 0.5 * expit(h_bias + (r @ kernel) * self._sigma2_factor)
-        return gr.sum()
+        return gr#.sum()
 
     def grad_kernel(self, r, v_bias, h_bias, kernel):
         """Gradient of wave function w.r.t. weight matrix"""
         _expit = expit(h_bias + (r @ kernel) * self._sigma2_factor)
         gr = self._sigma2_factor2 * r[:, np.newaxis] @ _expit[:, np.newaxis].T
-        return gr.sum()
+        return gr#.sum()
 
 
 if __name__ == "__main__":
@@ -164,7 +171,7 @@ if __name__ == "__main__":
     grad h_bias 0.5158698886876458
     grad kernel 0.49304207128538846
     drift force: [-0.4031509   0.94078729 -0.63485155 -0.85867653]
-    local energy: 2.3884918135331183
+    local energy: 1.8890100437817727
 
-    energy is wrong
+    energy is right
     '''

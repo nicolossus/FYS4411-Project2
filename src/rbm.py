@@ -180,12 +180,12 @@ def EnergyMinimization(NumberParticles, Dimension, NumberHidden, NumberMCcycles,
         #Trial position moving one particle at the time
         for i in range(NumberParticles):
             for j in range(Dimension):
-                PositionNew[i,j] = PositionOld[i,j]+normalvariate(0.0,1.0)*np.sqrt(TimeStep)+\
-                                       QuantumForceOld[i,j]*TimeStep*D
+                PositionNew[i,j] = PositionOld[i,j]+normalvariate(0.0,1.0)#*np.sqrt(TimeStep)+\
+                                       #QuantumForceOld[i,j]*TimeStep*D
 
             wfnew = WaveFunction(NumberParticles, Dimension, NumberHidden, PositionNew, a, b, w)
             QuantumForceNew = QuantumForce(NumberParticles, Dimension, NumberHidden, PositionNew, a, b, w)
-
+            """
             GreensFunction = 0.0
             for j in range(Dimension):
                 GreensFunction += 0.5*(QuantumForceOld[i,j]+QuantumForceNew[i,j])*\
@@ -193,9 +193,11 @@ def EnergyMinimization(NumberParticles, Dimension, NumberHidden, NumberMCcycles,
                                       PositionNew[i,j]+PositionOld[i,j])
 
             GreensFunction = np.exp(GreensFunction)
-            ProbabilityRatio = GreensFunction*wfnew**2/wfold**2
+            """
+            #ProbabilityRatio = GreensFunction*wfnew**2/wfold**2
+            ProbabilityRatio = wfnew**2/wfold**2
             #Metropolis-Hastings test to see whether we accept the move
-            np.random.seed(5)
+            #np.random.seed(5)
             #if random() <= ProbabilityRatio: # From Morten where random from random lib
             if np.random.uniform(0.0, 1.0) <= ProbabilityRatio:
                 for j in range(Dimension):
@@ -351,5 +353,13 @@ def run_simulation(eta, MaxIterations, NumberMCcycles, interaction=True):
     print(F"Total time passed: {time.time() - totaltime} | Mean time per iter {np.mean(time_array)}")
     np.savetxt("energies_" + str(eta) + "_" + str(MaxIterations) + ".txt", Energies)
     outputfile.close()
+
+    for i, energy in enumerate(Energies):
+        #if energy < 2.5:
+        plt.scatter(i, energy)
+        plt.hlines(0.5, 0, 100, linestyle="dashed")
+        plt.xlabel("Epoch")
+        plt.ylabel("Energy")
+    plt.savefig("test.pdf")
 
 run_simulation(0.05, 100, 10000, interaction=False)

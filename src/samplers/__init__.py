@@ -1,5 +1,2 @@
-from .base_sampler import BaseVMC
-from .metropolis import Metropolis
-from .metropolis_hastings import MetropolisHastings
-
-#from .state import State
+from .rbm_sampler import BaseRBMVMC
+from .rwm import RWM
