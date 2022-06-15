@@ -1,2 +1,2 @@
-from .models import *
+#from .models import models
 from .nqs import NQS

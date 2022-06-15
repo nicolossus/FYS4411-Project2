@@ -58,6 +58,7 @@
 \usepackage{caption} % figure & table caption
 \captionsetup{labelfont={normal, bf}, font={sl}}  
 \usepackage{chngcntr}
+\usepackage[section]{placeins} % \FloatBarrier
 
 %---------- math environment --------------
 \usepackage{mathtools}  % also loads amsmath
@@ -138,7 +139,7 @@
     keywordstyle=\color{blue},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\small,
+    basicstyle=\scriptsize\ttfamily,%\small,
     breakatwhitespace=false,
     breaklines=true,
     captionpos=b,

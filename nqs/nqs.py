@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import copy
 import sys
 import warnings
 from abc import abstractmethod
@@ -9,15 +10,13 @@ from threading import RLock as TRLock
 
 import numpy as np
 import pandas as pd
+from models import IRBM, JAXIRBM, JAXNIRBM, NIRBM
 from numpy.random import default_rng
 from pathos.pools import ProcessPool
 from tqdm.auto import tqdm
-
-from .models import IRBM, JAXIRBM, JAXNIRBM, NIRBM
-# from .state import State
-from .utils import (State, advance_PRNG_state, block, check_and_set_nchains,
-                    early_stopping, generate_seed_sequence, setup_logger,
-                    tune_scale_lmh_table, tune_scale_rwm_table)
+from utils import (State, advance_PRNG_state, block, check_and_set_nchains,
+                   early_stopping, generate_seed_sequence, setup_logger,
+                   tune_scale_lmh_table, tune_scale_rwm_table)
 
 warnings.filterwarnings("ignore", message="divide by zero encountered")
 
@@ -167,10 +166,22 @@ class NQS:
         rng = self._rng(seed)
 
         r = rng.standard_normal(size=self._nvisible)
+
+        # Initialize visible bias
         self._v_bias = rng.standard_normal(size=self._nvisible) * 0.01
+        # self._v_bias = np.zeros(self._nvisible)
+
+        # Initialize hidden bias
         self._h_bias = rng.standard_normal(size=self._nhidden) * 0.01
+        # self._h_bias = np.zeros(self._nhidden)
+
+        # Initialize kernel (weight matrix)
         self._kernel = rng.standard_normal(size=(self._nvisible,
                                                  self._nhidden))
+        # self._kernel *= np.sqrt(1 / self._nvisible)
+        self._kernel *= np.sqrt(1 / self._nvisible)
+        # self._kernel *= np.sqrt(2 / (self._nvisible + self._nhidden))
+
         logp = self._rbm.logprob(r, self._v_bias, self._h_bias, self._kernel)
         self._state = State(r, logp, 0, 0)
 
@@ -195,6 +206,9 @@ class NQS:
         """
 
         self._is_initialized()
+        self._training_cycles = max_iter
+        self._training_batch = batch_size
+        self._eta = eta
 
         if mcmc_alg is not None:
             self._set_mcmc_alg(mcmc_alg)
@@ -286,6 +300,8 @@ class NQS:
                 expval_energy_kernel = np.mean(
                     energies.reshape(batch_size, 1, 1) * grads_kernel, axis=0)
 
+                # variance = np.mean(energies**2) - energy**2
+
                 # Gradients
                 final_gr_v_bias = 2 * \
                     (expval_energy_v_bias - expval_energy * expval_grad_v_bias)
@@ -293,6 +309,12 @@ class NQS:
                     (expval_energy_h_bias - expval_energy * expval_grad_h_bias)
                 final_gr_kernel = 2 * \
                     (expval_energy_kernel - expval_energy * expval_grad_kernel)
+
+                if early_stopping:
+                    # make copies of current values before update
+                    v_bias_old = copy.deepcopy(v_bias)
+                    h_bias_old = copy.deepcopy(h_bias)
+                    kernel_old = copy.deepcopy(kernel)
 
                 # Gradient descent
                 if gradient_method == "gd":
@@ -332,9 +354,27 @@ class NQS:
                 grads_h_bias = []
                 grads_kernel = []
                 steps_before_optimize = batch_size
+                '''
+                if early_stopping:
+                    v_bias_converged = np.allclose(v_bias,
+                                                   v_bias_old,
+                                                   rtol=rtol,
+                                                   atol=atol)
+                    h_bias_converged = np.allclose(h_bias,
+                                                   h_bias_old,
+                                                   rtol=rtol,
+                                                   atol=atol)
+                    kernel_converged = np.allclose(kernel,
+                                                   kernel_old,
+                                                   rtol=rtol,
+                                                   atol=atol)
+
+                    if v_bias_converged and h_bias_converged and kernel_converged:
+                        did_early_stop = True
+                        break
+                '''
 
         # early stop flag activated
-        # numpy.isclose
         if did_early_stop:
             msg = ("Early stopping, training converged")
             self.logger.info(msg)
@@ -418,7 +458,7 @@ class NQS:
         self._scale = scale
         self._is_tuned_ = True
 
-    def sample(self, nsamples, nchains=1, burn=0, seed=None, mcmc_alg=None):
+    def sample(self, nsamples, nchains=1, seed=None, mcmc_alg=None):
         """
 
         """
@@ -432,18 +472,80 @@ class NQS:
         h_bias = self._h_bias
         kernel = self._kernel
         scale = self._scale
-
         if mcmc_alg is not None:
             self._set_mcmc_alg(mcmc_alg)
 
-        #nchains = check_and_set_nchains(nchains, self.logger)
-        #seeds = generate_seed_sequence(seed, nchains)
-        seed_seq = generate_seed_sequence(seed, 1)[0]
+        nchains = check_and_set_nchains(nchains, self.logger)
+        seeds = generate_seed_sequence(seed, nchains)
 
+        if nchains == 1:
+            chain_id = 0
+            results, self._energies = self._sample(nsamples,
+                                                   state,
+                                                   v_bias,
+                                                   h_bias,
+                                                   kernel,
+                                                   scale,
+                                                   seeds[0],
+                                                   chain_id
+                                                   )
+            self._results = pd.DataFrame([results])
+        else:
+            if self._log:
+                # for managing output contention
+                tqdm.set_lock(TRLock())
+                initializer = tqdm.set_lock
+                initargs = (tqdm.get_lock(),)
+            else:
+                initializer = None
+                initargs = None
+
+            # Handle iterables
+            nsamples = (nsamples,) * nchains
+            state = (state,) * nchains
+            v_bias = (v_bias,) * nchains
+            h_bias = (h_bias,) * nchains
+            kernel = (kernel,) * nchains
+            scale = (scale,) * nchains
+            chain_ids = range(nchains)
+
+            with ProcessPool(nchains) as pool:
+                results, self._energies = zip(*pool.map(self._sample,
+                                                        nsamples,
+                                                        state,
+                                                        v_bias,
+                                                        h_bias,
+                                                        kernel,
+                                                        scale,
+                                                        seeds,
+                                                        chain_ids,
+                                                        initializer=initializer,
+                                                        initargs=initargs
+                                                        ))
+            self._results = pd.DataFrame(results)
+
+        self._sampling_performed_ = True
+        if self._log:
+            self.logger.info("Sampling done")
+
+        return self._results
+
+    def _sample(
+        self,
+        nsamples,
+        state,
+        v_bias,
+        h_bias,
+        kernel,
+        scale,
+        seed,
+        chain_id
+    ):
+        """To be called by process"""
         if self._log:
             t_range = tqdm(range(nsamples),
-                           desc=f"[Sampling progress]",
-                           position=0,
+                           desc=f"[Sampling progress] Chain {chain_id+1}",
+                           position=chain_id,
                            leave=True,
                            colour='green')
         else:
@@ -454,30 +556,38 @@ class NQS:
         energies = np.zeros(nsamples)
 
         for i in t_range:
-            state = self._step(state, v_bias, h_bias, kernel, seed_seq)
+            state = self._step(state, v_bias, h_bias, kernel, seed)
             energies[i] = self._rbm.local_energy(state.positions,
                                                  v_bias,
                                                  h_bias,
                                                  kernel
                                                  )
+        if self._log:
+            t_range.clear()
 
-        energies = energies[burn:]
         energy = np.mean(energies)
         error = block(energies)
         variance = np.mean(energies**2) - energy**2
-        acc_rate = state.n_accepted / (nsamples - burn)
-        self._sampling_performed_ = True
+        acc_rate = state.n_accepted / nsamples
 
-        print("energy", energy)
-        print("error", error)
-        print("variance", variance)
-        print("acc rate", acc_rate)
+        results = {"chain_id": chain_id + 1,
+                   "nparticles": self._P,
+                   "dim": self._dim,
+                   "energy": energy,
+                   "std_error": error,
+                   "variance": variance,
+                   "accept_rate": acc_rate,
+                   "eta": self._eta,
+                   "scale": scale,
+                   "nvisible": self._nvisible,
+                   "nhidden": self._nhidden,
+                   "mcmc_alg": self._mcmc_alg,
+                   "nsamples": nsamples,
+                   "training_cycles": self._training_cycles,
+                   "training_batch": self._training_batch
+                   }
 
-        return energies
-
-    def _sample():
-        """To be called by process"""
-        pass
+        return results, energies
 
     def _rwm_step(self, state, v_bias, h_bias, kernel, seed):
         """One step of the random walk Metropolis algorithm
@@ -584,3 +694,37 @@ class NQS:
         new_state = State(new_positions, new_logp, new_n_accepted, new_delta)
 
         return new_state
+
+    @property
+    def scale(self):
+        return self._scale
+
+    @scale.setter
+    def scale(self, value):
+        self._scale = value
+
+    @property
+    def results(self):
+        try:
+            return self._results
+        except AttributeError:
+            msg = "Unavailable, a call to sample must be made first"
+            raise SamplingNotPerformed(msg)
+
+    @property
+    def energies(self):
+        try:
+            return self._energies
+        except AttributeError:
+            msg = "Unavailable, a call to sample must be made first"
+            raise SamplingNotPerformed(msg)
+
+    def to_csv(self, filename):
+        """Write (full) results dataframe to csv.
+
+        Parameters
+        ----------
+        filename : str
+            Output filename
+        """
+        self.results.to_csv(filename, index=False)

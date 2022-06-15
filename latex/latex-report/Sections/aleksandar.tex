@@ -1,72 +1,4 @@
-%================================================================
-\section{Theory}\label{sec:Theory}
-%================================================================
-
-
-%----------------------------------------------------------------
-\subsection{System}
-%----------------------------------------------------------------
-
-
-
-
-
-%----------------------------------------------------------------
-\subsection{Boltzmann machines}
-%----------------------------------------------------------------
-A \textit{Boltzmann machine} (BM) is an undirected probabilistic graphical model with stochastic continuous or discrete nodes. It consists of one visible and one hidden layer, which are both inter- and intraconnected, meaning that there are weight matrices that represents the strength of the interactions between the nodes (both within the same layer and connections to the nodes in the other layer). The Boltzmann machine is a generative model as it allows generating new samples from a learned distribution. These properties are useful in our search for a ground state wave function, however, the Boltzmann machine requires a large computational cost to train. We will therefore employ a \textit{restricted Boltzmann machine} to do our bidding.  \autoref{fig:vis_BM} is a simple representation of a BM network, where all the nodes are connected. 
-
-\begin{figure}[H]
-\begin{center}\includegraphics[scale=0.8]{latex/latex-report/Images/bm_visualize.pdf}
-\end{center}
-\caption{Simple visualization of a BM network with a visible layer of $n$ nodes and a hidden layer of $m$ nodes. The links between the nodes are weighted, and they are all contained within a weight matrix, $W$. The BM network is fully connected between all nodes. Every link is undirected, as the connections go both ways.}
-\label{fig:vis_BM}
-\end{figure}
-
-%----------------------------------------------------------------
-\subsection{Restricted Boltzmann Machines}
-%----------------------------------------------------------------
-The visible and hidden layer of the RBM is interconnected, but not intraconnected. The connections between the hidden layer, $\bm{h}\in\mathbb{R}^N$, and the visual layer, $\bm{x}\in\mathbb{R}^M$, are weighted by the weight matrix $W\in\mathbb{R}^{M\times N}$, represented by the edges in \autoref{fig:vis_RBM}. The layers can both have biases of equal length. We denote the bias for the visible layer, $\bm{a}$, and for the hidden layer, $\bm{b}$. 
-The most common type of an RBM is the \textit{binary-binary RBM}, but to be able to represent the continuous configuration space of the particles, we will use a \textit{Gaussian-binary RBM}. 
-
-
-\begin{figure}[H]
-\begin{center}\includegraphics[scale=0.8]{latex/latex-report/Images/rbm_visualize.pdf}
-\end{center}
-\caption{Simple visualization of an RBM network with a visible layer of $n$ nodes and hidden layer layer of $m$ nodes. The links between the nodes are weighted, and they are all contained within a weight matrix, $W$. The RBM network is fully connected between the layers. Every link is undirected, as the connections go both ways.}
-\label{fig:vis_RBM}
-\end{figure}
-
-%----------------------------------------------------------------
-\subsubsection{Representing the wave function using a neural network.}
-%----------------------------------------------------------------
-We want the RBM to learn the probability distribution of the quantum mechanical system we want to simulate, and generate samples using the RBM as our system. The RBM representation of the wave function is called a \textit{neural network quantum state}, or NQS. 
-
-The Boltzmann distribution describes the probability of a system being in a certain state as a function of energy and temperature. It is widely used in statistical physics and mathematics. Mathematically, it can be stated as 
-\begin{equation}\label{eq:boltzmann_dist}
-    p_i = \frac{e^{-\frac{1}{T}E_i}}{Z}, 
-\end{equation}
-where $E_i$ is the energy of state $\ket{i}$, $T$ is the temperature of the system and $Z$ denotes the \textit{partition function}. The partition function has the form
-\begin{equation}
-    Z = \sum_{j=0}^{J-1} e^{-\frac{1}{T}E_j}, 
-\end{equation}
-where $J$ is the number of possible states, and is the normalization condition for the probability $p_i$. Now, if we define the \textit{energy function} of the neural network to be a function of the visible and hidden layers, $E\qty(\bm{x}, \bm{h})$, we can use the Boltzmann distribution to define a joint probability function 
-\begin{equation}
-    p\qty(\bm{x}, \bm{h}) = \frac{e^{-\frac{1}{T}E\qty(\bm{x}, \bm{h})}}{Z}.
-\end{equation}
-The partition function, $Z$, will then be the sum of all possible configurations of visible and hidden nodes, 
-\begin{equation}
-    Z = \int\int e^{-\frac{1}{T}E\qty(\bm{x}, \bm{h})}\mathrm{d}\bm{x}\mathrm{d}\bm{h}.
-\end{equation}
-Generally, calculating the partition function is intractable (or just inconvenient), and is luckily not needed. The reason is that we use Markov chain Monte Carlo (MCMC) methods that only need the \textit{ratio} between states to generate new samples, 
-
-%----------------------------------------------------------------
-\subsubsection{Binary-binary RBMs}
-%----------------------------------------------------------------
-
-
-
-\section{Theory Aleksandar}
+\section{Theory}
 \subsection{Neural Network Quantum State}
 The Neural Network Quantum State (NQS) For this project, as mentioned, 
 Instead of going with the approach of finding a trial wave function for the system, as done in our previous project, we are going to represent the state by a Neural Network Quantum State using the Restricted Boltzman Machine (RBM) as our as our Neural Network (NN) of choice. This approach of representing the wavefunction with a RBM was first done recently by G. Carleo and M. Troyer in 2017 [\textcolor{blue}{Solving the quantum many-body problem with artificial neural networks}]. However, in their project, they .... while we
@@ -155,10 +87,8 @@ where $\mathbf{h}$ is....... This will be used to represent our wave function. W
 \end{align*}
 where $a_i$ and $b_i$ are elements of $a$ and $b$. With this RBM, we will be able to get a good trial wave function for us to use.
 
-\subsection{Hamiltonian}
-
-
 \subsection{Metropolis sampling}
 
 \subsection{Importance sampling}
 The Metropolis-Hastings or Importance sampling.. 
+
