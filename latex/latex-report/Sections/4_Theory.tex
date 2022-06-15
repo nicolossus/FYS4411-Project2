@@ -4,16 +4,16 @@
 
 
 %----------------------------------------------------------------
-\subsection{System}\label{sec:systems}
+\subsection{Systems}\label{sec:systems}
 %----------------------------------------------------------------
 
-We will be considering two system : one electron in a one-dimensional harmonic oscillator trap, and two electrons interacting via the Coulomb interactions in a two-dimensional isotropic harmonic oscillator trap.
+We will be considering two system; one electron in a one-dimensional harmonic oscillator trap, and two electrons interacting via the Coulomb interactions in a two-dimensional isotropic harmonic oscillator trap.
 
 A general idealized Hamiltonian for $N$ interacting particles in a $d$-dimensional isotropic trap is given by 
 \begin{equation}
     H = \sum_{i=1}^N \qty(-\frac{1}{2}\laplacian_i+ \frac{1}{2}\omega^2 \bm{r_i}\cdot\bm{r_i}) + \sum_{i<j}\frac{1}{r_{ij}}, 
 \end{equation}
-where we are using the natural units given by $\hbar=c=e=m_e=k_e=1$. The product $\bm{r}_i\cdot\bm{r}_i$ denotes the dot product of the positions of particle $i$, and all the energies are in atomic units (a.u), and $D$ is the dimensionality of the trap. The kinetic energy of the electrons is given $\sum_{i=1}^N\qty(-\frac{1}{2}\laplacian_i)$, the potential energy with respect to the trap potential is given $\sum_{i=1}^N \qty(\frac{1}{2}D\omega^2r_i^2)$, and the Coulomb interactions are modeled as the inverse Euclidian distance between the electrons ($r_{ij} = \norm{\bm{r}_i-\bm{r}_j}_2$). Notice that $\sum_{i<j}$ denotes a double sum, such that 
+where we are using the natural units given by $\hbar=c=e=m_e=k_e=1$. The product $\bm{r}_i\cdot\bm{r}_i$ denotes the dot product of the positions of particle $i$, and all the energies are in atomic units (a.u). The kinetic energy of the electrons is given $\sum_{i=1}^N\qty(-\frac{1}{2}\laplacian_i)$, the potential energy with respect to the trap potential is given $\sum_{i=1}^N \qty(\frac{1}{2}D\omega^2r_i^2)$, and the Coulomb interactions are modeled as the inverse Euclidian distance between the electrons ($r_{ij} = \norm{\bm{r}_i-\bm{r}_j}_2$). Notice that $\sum_{i<j}$ denotes a double sum, such that 
 \begin{equation}
     \sum_{i<j}\frac{1}{r_{ij}} = \sum_{i=1}^{N-1}\sum_{j=i+1}^N\frac{1}{r_{ij}}. 
 \end{equation}
@@ -45,8 +45,9 @@ with the corresponding energy eigenvalue of
 \end{equation*}
 which yields the ground state $n_x = n_y = 0$, $E_{0, 0}=\omega$. The two electrons can have the same quantum numbers due to their spin quantum number being different, which does not affect the energy. However, if there are more electrons, the wave functions need to take into account that two fermions cannot occupy the same quantum numbers. We say that the degeneracy of the ground state wave function for the harmonic oscillator is two. 
 
-
+%----------------------------------------------------------------
 \subsection{Neural Networks}
+%----------------------------------------------------------------
 Artificial Neural Networks, or simply just Neural Networks (NN), are computer systems which are modeled after the biological neural networks of animal brains. Just like biological brains, Neural Networks consists of neurons which either activate or or not depending on if a given threshold is reached. Each connection of a Neural Network can be compared with the synapses of a biological brain. They transmit signals to other neurons. However, biological neural networks learn through a process called synaptic plasticity, while artificial while learn by adjusting it's weights and biases in order to minimize a given cost function. The weights of the Neural Network are the connections between two neurons. In Graph Theory, we would refer to them as (weighted) edges between nodes. The bias term shifts the input of a neuron. The general approach to neural networks is to train it using gradients of a \textit{cost function}, i.e. a distance between the ground truth labels and the prediction yielded. Then perform a gradient-based approach to update the parameters of the neural network. 
 \\
 A Neural Network consists of an input layer, a hidden layer, or multiple hidden layers as in the case of deep neural networks, and an output layer. An example of a neural network architecture with three hidden layers and three outputs is displayed in \autoref{fig:NN}. %[\textcolor{blue}{Figure 1}]
@@ -59,7 +60,7 @@ A Neural Network consists of an input layer, a hidden layer, or multiple hidden 
   \label{fig:NN}
 \end{figure}
 
-Generally, we can group machine learning in three general categories; supervised, unsupervised and reinforcement learning. If you have a data set $\mathcal{D}$ with known ground truth labels and train the neural network to learn a function for the features of the network that produces a general output equal that corresponds well to a general data set of same distribution as $\mathcal{D}$, we have supervised learning. In the case of a classification problem, the Neural Network will activate one of the output neurons corresponding to the label of the classified object, while in a regression problem, the single output neuron will return the predicted output value. Unsupervised learning takes a data set without known ground truth labels and tries to find correlations between the data. Reinforcement learning is performed when we do not have ground truth labels and use some kind of other measure to find a probability distribution to match. The measure can for example be the predicted labels of another well-trained network, or a principle. In our case we train the network based on the variational principle (see \citep{project1}), which states that any approximation to the expectation value of energy is greater or equal to the ground state energy. 
+Generally, we can group machine learning in three general categories; supervised, unsupervised and reinforcement learning. If you have a data set $\mathcal{D}$ with known ground truth labels and train the neural network to learn a function for the features of the network that produces a general output equal that corresponds well to a general data set of same distribution as $\mathcal{D}$, we have supervised learning. In the case of a classification problem, the Neural Network will activate one of the output neurons corresponding to the label of the classified object, while in a regression problem, the single output neuron will return the predicted output value. Unsupervised learning takes a data set without known ground truth labels and tries to find correlations between the data, or learns a distribution using some other criterion than a cost function including ground truth labels. Reinforcement learning is performed when we do not have ground truth labels and use some kind of penalty and reward system to evaluate generated output. In our case we train the network based on the variational principle (see \citep{project1}), which states that any approximation to the expectation value of energy is greater or equal to the ground state energy. 
 
 %----------------------------------------------------------------
 \subsection{Boltzmann machines}
@@ -76,7 +77,7 @@ A \textit{Boltzmann machine} (BM) is an undirected probabilistic graphical model
 %----------------------------------------------------------------
 \subsection{Restricted Boltzmann Machines}
 %----------------------------------------------------------------
-The visible and hidden layer of the RBM is interconnected, but not intraconnected. The connections between the hidden layer, $\bm{h}\in\mathbb{R}^N$, and the visual layer, $\bm{x}\in\mathbb{R}^M$, are weighted by the weight matrix $W\in\mathbb{R}^{M\times N}$, represented by the edges in \autoref{fig:vis_RBM}. The layers can both have biases of equal length. We denote the bias for the visible layer, $\bm{a}$, and for the hidden layer, $\bm{b}$. 
+The visible and hidden layer of the RBM is interconnected, but not intraconnected. The connections between the hidden layer, $\bm{h}\in\mathbb{R}^N$, and the visible layer, $\bm{x}\in\mathbb{R}^M$, are weighted by the weight matrix $W\in\mathbb{R}^{M\times N}$, represented by the edges in \autoref{fig:vis_RBM}. The layers can both have biases of equal length. We denote the bias for the visible layer, $\bm{a}$, and for the hidden layer, $\bm{b}$. 
 The most common type of an RBM is the so-called \textit{binary-binary RBM}, but to be able to represent the continuous configuration space of the particles, we will use a \textit{Gaussian-binary RBM} implementation. 
 
 
@@ -113,10 +114,23 @@ Generally, calculating the partition function is intractable (or just inconvenie
     \frac{p'}{p} = \exp{-\frac{1}{T}E\qty(\bm{x'}, \bm{h}) + \frac{1}{T}E\qty(\bm{x}, \bm{h})}. 
 \end{equation*}
 Further, we will set the `temperature' parameter equal to 1. 
+
+%----------------------------------------------------------------
+\subsection{Binary-Binary RBM}
+%----------------------------------------------------------------
+The Binary-Binary RBM discrete configuration space. Here, we use binary units in both the visible and hidden layer where the binary values most commonly taken on by the nodes are $0$ and $1$. The corresponding energy function is defined as follows:
+\begin{equation*}
+	E(\mathbf{x}, \mathbf{h}) = - \sum_i^M x_i a_i- \sum_j^N b_j h_j - \sum_{i,j}^{M,N} x_i w_{ij} h_j,
+\label{_auto3}
+\end{equation*}
+or in vector notation as
+\begin{equation*}
+    E(\mathbf{x}, \mathbf{h}) = - \mathbf{x}_i \mathbf{a}_i - \mathbf{b}_j \mathbf{h}_j - \mathbf{x}_i \mathbf{w}_{i,j} \mathbf{h}_j.
+\end{equation*}
 %----------------------------------------------------------------
 \subsection{Gaussian-Binary RBM}
 %----------------------------------------------------------------
-The Gaussian-Binary RBM can represent continuous configuration space, such as our systems. Another advantage it has, is that the Gaussian part of the wave function can easily be approximated by the Gaussian part of the RBM, and thus it should be a suitable choice of wave function. The energy function $E\qty(\bm{x}, \bm{h})$, is given as 
+The Gaussian-Binary RBM can represent continuous configuration space, such as our systems of interest. Another advantage it has, is that the Gaussian part of the wave function can easily be approximated by the Gaussian part of the RBM, and thus it should be a suitable choice of wave function. The energy function $E\qty(\bm{x}, \bm{h})$, is given as 
 \begin{equation*}
     E\qty(\bm{x}, \bm{h}) = \sum_i^M \frac{(x_i - a_i)^2}{2\sigma_i^2} - \sum_j^N b_j h_j - \sum_{i,j}^{M,N} \frac{x_i w_{ij} h_j}{\sigma_i^2} 
 \end{equation*}
@@ -132,7 +146,7 @@ $\sigma^2$ will refer to the expected variance in the Gaussian layer of the mode
 We will treat the expectation value of the local energy as the cost function of our RBM and try and minimize it, as according to the variational principle. 
 
 %----------------------------------------------------------------
-\subsubsection{Derivations of local energy.}
+\subsubsection{Derivations of local energy}
 %----------------------------------------------------------------
 
 We want the NQS marginal probability distribution over the visible layer to mimic the wave function (alternatively, the square of the wave function). Therefore, 
@@ -166,7 +180,7 @@ while the second partial derivative is
     \pdv[2]{\ln{\Psi_T\qty(\bm{x})}}{x_i} &= -\frac{1}{\sigma^2} + \sum_j^N \frac{W_{ij}^2}{\sigma^4} \frac{\mathrm{e}^{-b_j-\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}}}{\qty(\mathrm{e}^{-b_j-\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}} + 1)^2} \\
    &= -\frac{1}{\sigma^2} + \frac{1}{\sigma^4}\sum_j^N W_{ij}^2 \frac{\mathrm{e}^{b_j+\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}}}{\qty(1 + \mathrm{e}^{b_j+\qty[\frac{\bm{x}}{\sigma^2}]^TW_{*j}})^2}. 
 \end{align*}
-The local energy can then be calculated, $E_L = K + P$, where the potential $P$ depends on the system. We perform our calculations in an isotropic harmonic oscillator with an angular frequency $\omega$ and, if the particles are interacting, a Coulomb interacting potential between the electrons, such that the local energy becomes 
+The local energy can then be calculated, $E_L = K + P$, where the potential, $P$, depends on the system. We perform our calculations in an isotropic harmonic oscillator trap with an angular frequency $\omega$ and, if the particles are interacting, a Coulomb interacting potential between the electrons, such that the local energy becomes 
 \begin{equation}
     E_L = \frac{1}{2}\sum_i^M\qty(-\qty[\pdv{\ln{\Psi_T}}{x_i}]^2-\pdv[2]{\ln{\Psi_T}}{x_i} + \omega x_i^2) + \sum_{k<l}\frac{1}{r_{kl}},  
 \end{equation}
@@ -174,7 +188,7 @@ where $r_{kl}$ is the Euclidian distance between particle $k$ and $j$ in configu
 %-----------------------------------------------------------------------
 \subsubsection{Gradients needed for gradient descent-based optimizer.}
 %-----------------------------------------------------------------------
-We also need the gradients with respect to the bias of the visible layer, $\bm{a}$, to be able to use a GD approach in the update of the parameters. We need to find the gradient with respect to the expectation value of the energy yielded by the Monte Carlo method applied. The gradient of the expectation value of the energy with respect to an arbitrary parameter $\bm{\lambda}$ is derived in \citep{project1} and is 
+We also need the gradients with respect to the bias of the visible layer, $\bm{a}$, to be able to use a Gradient Descent (GD) approach in the update of the parameters. We need to find the gradient with respect to the expectation value of the energy yielded by the Monte Carlo method applied. The gradient of the expectation value of the energy with respect to an arbitrary parameter $\bm{\lambda}$ is derived in \citep{project1} and is 
 \begin{equation}\label{eq:update_rule}
     \grad_{\bm{\lambda}}\expval{E} = 2\qty(\expval{E\grad_{\bm{\lambda}}\ln{\Psi_T}} - \expval{E}\expval{\grad_{\bm{\lambda}}\ln{\Psi_T}}). 
 \end{equation}
