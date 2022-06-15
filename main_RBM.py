@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.random import default_rng
-from src import vmc, NonInteractRBM
+#from src import vmc, NonInteractRB
 import matplotlib.pyplot as plt
 
 
@@ -28,7 +28,8 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
     potential_energy = 0.0
 
     Q = Qfac(NumberHidden, r, b, w)
-
+    dpsi = 0.0
+    dpsi2 = 0.0
     for iq in range(NumberParticles):
         for ix in range(Dimension):
             sum1 = 0.0
@@ -42,8 +43,10 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
             #dlnpsi1 = -(r[iq,ix] - a[iq,ix]) /sig2 + sum1/sig2 # From Moren
             #dlnpsi2 = -1/sig2 + sum2/sig2**2                   # From Morten
 
-            dlnpsi1 = -0.5*(r[iq, ix] - a[iq, ix]) + 0.5*sum1
-            dlnpsi2 = -0.5 + 0.5*sum2
+            dlnpsi1 = -(r[iq, ix] - a[iq, ix]) + sum1
+            dlnpsi2 = -1.0 + sum2
+            dpsi += -0.5*dlnpsi1*dlnpsi1
+            dpsi2 += -0.5*dlnpsi2
             locenergy += 0.5*(-dlnpsi1*dlnpsi1 - dlnpsi2 + r[iq,ix]**2)
             kinetic_energy += -0.5*(dlnpsi1*dlnpsi1 + dlnpsi2)
             potential_energy += 0.5*r[iq,ix]**2
@@ -60,48 +63,59 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
                     distance += (r[iq1,ix] - r[iq2,ix])**2
 
                 locenergy += 1 / np.sqrt(distance)
-
+    print("Grad : ", dpsi)
+    print("Grad2 : ", dpsi2)
+    print("Potential: ", potential_energy)
     #locenergy = kinetic_energy + potential_energy
     return locenergy
 
-nsamples = 2000
+nsamples = 5000
 training_iterations = 100
 
-N = 1
-dim = 1
+N = 2
+dim = 2
 nhidden = 2
+M = N*dim
+#rng = default_rng(2113)
+#r = np.array([[0.30471707975443135, -1.0399841062404955],
+r = np.array([0.30471707975443135, -1.0399841062404955,
+             0.7504511958064572, 0.9405647163912139])
+v_bias = np.array([-0.00631753,  0.01129719, -0.001397, -0.01849913])
+h_bias = np.array([0.00869276, -0.00643394])
+kernel = np.array([[-0.40775875,  0.08298116],
+                   [-0.36875534,  0.03443719],
+                   [0.40923255, -0.04661963],
+                   [-1.21311022,  0.80609878]])
+#jax_wf = NonInteractRBM()
 
-rng = default_rng(2113)
-r = rng.standard_normal(size=(N, dim))
-v_bias = rng.standard_normal(size=(N, dim))
-h_bias = rng.standard_normal(size=(nhidden))
-kernel = rng.standard_normal(size=(N, dim, nhidden))
-jax_wf = NonInteractRBM()
 
 
+#wf = vmc.RBMWF(N, dim, nhidden, scale=0.5, rng=default_rng, seed=2113)
 
-wf = vmc.RBMWF(N, dim, nhidden, scale=0.5, rng=default_rng, seed=2113)
-print("JAX wf: ", jax_wf.wf(r, wf._a, wf._b, wf._W))
-print("JAX df: ", jax_wf.drift_force(r, wf._a, wf._b, wf._W))
-print("JAX LE: ", jax_wf.local_energy(r, wf._a, wf._b, wf._W))
+#print("JAX wf: ", jax_wf.wf(r, wf._a, wf._b, wf._W))
+#print("JAX df: ", jax_wf.drift_force(r, wf._a, wf._b, wf._W))
+#print("JAX LE: ", jax_wf.local_energy(r, wf._a, wf._b, wf._W))
+"""
 print("JAX grad a: ", jax_wf.grad_v_bias(r, wf._a, wf._b, wf._W))
 print("JAX grad b: ", jax_wf.grad_h_bias(r, wf._a, wf._b, wf._W))
 print("JAX grad W: ", jax_wf.grad_kernel(r, wf._a, wf._b, wf._W))
-print("wf wf: ", wf.wf(r))
-print("wf df: ", wf.drift_force(r))
-print("wf LE: ", wf.local_energy(r))
+"""
+##print("wf df: ", wf.drift_force(r))
+#print("wf LE: ", wf.local_energy(r))
+"""
 print("wf grad a: ", wf.grad_a(r))
 print("wf grad b: ", wf.grad_b(r))
 print("wf grad W: ", wf.grad_weights(r))
-wf._Q(r)
-wf._denominator(r)
-rng = default_rng(None)
-rbm = vmc.samplers.LMHRBM(wf)
-initial_positions = rng.normal(loc=0.0, scale=1.0, size=(N, dim))
-print("LE: ", LocalEnergy(N, dim, nhidden, r, wf._a, wf._b, wf._W, False))
+"""
+#wf._Q(r)
+#wf._denominator(r)
+#rng = default_rng(None)
+#rbm = vmc.samplers.LMHRBM(wf)
+#initial_positions = rng.normal(loc=0.0, scale=1.0, size=(N, dim))
+print("LE: ", LocalEnergy(N, dim, nhidden, r.reshape(N, dim), v_bias.reshape(N, dim), h_bias, kernel.reshape(N, dim, nhidden), False))
 
 
-
+"""
 energies = rbm.train(training_iterations, nsamples, initial_positions, eta=0.1)
 
 for i, energy in enumerate(energies):
@@ -111,3 +125,4 @@ for i, energy in enumerate(energies):
     plt.xlabel("Epoch")
     plt.ylabel("Energy")
 plt.savefig("test.pdf")
+"""
