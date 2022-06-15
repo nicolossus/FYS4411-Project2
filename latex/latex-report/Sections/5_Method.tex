@@ -8,10 +8,10 @@
 
 \subsubsection{Variational Monte Carlo}
 
-Theory and description of of both brute-force and the Metropolis-Hastings algorithm can be accessed through our previous work [cite p1] and we will therefore base our variational part on the on previous findings and analysis. In short, our results showed that the Metropolois-Hastings implementation yielded the most accurate results, we will use it as the basis for out Variational Monte Carlo (VMC) approach alongside the RBM. It requires relatively few numbers of Monte Carlo cycles , $M$, for it to yield sufficient results even for more complex systems than studied here. From our analysis, we noted that the optimal step size was $\Delta t = ?$ and 
+Theory and description of of both brute-force and the Metropolis-Hastings algorithm can be accessed through our previous work [cite p1] and we will therefore base our variational part on the on previous findings and analysis. In short, our results showed that the Langevin Metropolois-Hastings (LMH, see \citep{project1}) implementation yielded the most accurate results, we will use it as the basis for out Variational Monte Carlo (VMC) approach alongside the RBM. It requires relatively few numbers of Monte Carlo cycles , $M$, for it to yield sufficient results even for more complex systems than studied here. From our analysis, we noted that the optimal step size was $\Delta t = ?$ and 
 
 
-\subsubsection{Optimization techniques}
+\subsubsection{Stochastic Gradient Decent}
 %Our gradient decent approach can also be found in our previous work. We refrained from implementing a Stochastic Gradient Decent scheme as we simply do not have an abundance with datapoints to work with.
 
 Our gradient decent approach can also be found in our previous work. In principle, we have as many datapoints as we want depending on what we want to simulate. We will therefore use Stochastic Gradient Decent (Optimization) approaches to find upper limit of numerically with a few monte carlo cycles. Although a SGD could provide us with decent results, it is not adequate enough for a variational problem depending on multiple parameters like in this project. We will the implement a momentumbased SGD and ADAM. 
@@ -19,9 +19,27 @@ Our gradient decent approach can also be found in our previous work. In principl
 Unlike previously, we will treat the local energy, $E_L$ as the cost and differentiate with regard to the variational parameter, $\alpha$. In order to obtain the wave function that is an eigenstate of the ground state energy, we will tune the $\alpha$ value containing the RBM parameters. In general, the premise is the same, except that we are working with multiple parameters, being visible and hidden weights and biases of the RBM. 
 
 \begin{equation*}
-    G_i = \nabla \left \langle E_L(\mathbf{\alpha}_i) \right \rangle
+    G_i = \gradient \left \langle E_L(\mathbf{\alpha}_i) \right \rangle
 \end{equation*}
+The derivative of $G_i$ with respect to  $\mathbf{\alpha}$ is
+\begin{equation*}
+    G_i = 2 \left (\left \langle E_L \frac{1}{\Psi} \frac{\partial \Psi}{\partial \alpha_i} \right \rangle - \left \langle E_L \right \rangle \left \langle \frac{1}{\Psi} \frac{
+    \partial \Psi}{\partial \alpha_i} \right \rangle \right).
+\end{equation*}
+For every step, we update the value of $\alpha_i$ by subtracting by the expectation value of the energy which then is multiplied by a learning rate, $\gamma$ in the following way,
+
+\begin{equation*}
+    \alpha_{i, k+1} =  \alpha_{i, k} - \gamma_i G(\alpha_{i, k}) \qquad \text{for} \,\, k \geq 0,
+\end{equation*}
+where $\alpha_{i, k}$ and $\alpha_{i, k+1}$ represent the old and new values of $\alpha_{i}$ respectively. This procedure is repeated until we get the optimal value. 
 
 \subsubsection{ADAM}
 In addition of keeping track of the running average of the first momentum, the ADAM (ADAptive Momentestimation) algorithm also does the same for the second moment of the gradient. Complete description of this method can be found in our previous work [cite p1]. 
 
+% Endre navn på G_i
+
+\subsubsection{Blocking}
+The complete outline and mathematical backround of the blocking method used in our implementation, can be found in our previous work [cite 1] and is based on Jonnson’s work [cite Jonsson]. Error estimation and the blocking implementation here is the same as in our previous work.
+
+\subsection{VMC parameters and general outline}
+We have in this project looked at two \textit{Markov Chain Monte Carlo} (MCMC) methods. The Scale parameter \textit{Random Walk Metropolis} (RWM) and the \textit{Langevin Metropolis-Hastings} (LMH) algorithm. Complete outline of these methods can be found in our previous work [cite p1]. For the single electron in one-dimension we found a suitable scale parameter used in generating proposal states to be $3.0$, which yielded an acceptance 
