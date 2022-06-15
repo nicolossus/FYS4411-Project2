@@ -36,7 +36,7 @@ def WaveFunction(NumberParticles, Dimension, NumberHidden, r, a, b, w):
     #print(Psi2)
 
     #Psi1 = np.exp(-Psi1/(2*sig2)) # From Morten
-    Psi1 = np.exp(-Psi1*0.5)
+    Psi1 = np.exp(-Psi1)
 
     return np.sqrt(Psi1*Psi2)
 
@@ -65,8 +65,8 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
             #dlnpsi1 = -(r[iq,ix] - a[iq,ix]) /sig2 + sum1/sig2 # From Moren
             #dlnpsi2 = -1/sig2 + sum2/sig2**2                   # From Morten
 
-            dlnpsi1 = -0.5*(r[iq, ix] - a[iq, ix]) + 0.5*sum1
-            dlnpsi2 = -0.5 + 0.5*sum2
+            dlnpsi1 = -(r[iq, ix] - a[iq, ix]) + sum1
+            dlnpsi2 = -1 + sum2
             dpsi += -0.5*dlnpsi1*dlnpsi1
             dpsi2 += -0.5*dlnpsi2
             locenergy += 0.5*(-dlnpsi1*dlnpsi1 - dlnpsi2 + r[iq,ix]**2)
@@ -91,12 +91,12 @@ def LocalEnergy(NumberParticles, Dimension, NumberHidden, r, a, b, w, interactio
     #locenergy = kinetic_energy + potential_energy
     return locenergy
 
-nsamples = 5000
+nsamples = int(2**15)
 training_iterations = 100
 
-N = 1
-dim = 1
-nhidden = 2
+N = 2
+dim = 2
+nhidden = 10
 M = N*dim
 rng = default_rng(2113)
 """
@@ -109,15 +109,15 @@ kernel = np.array([[-0.40775875,  0.08298116],
                    [0.40923255, -0.04661963],
                    [-0.21311022,  0.80609878]])
 """
-r = rng.normal(loc=0.0, scale=1.0, size=(M,))
-v_bias = rng.normal(loc=0.0, scale=0.5, size=(M,))
-h_bias = rng.normal(loc=0.0, scale=0.5, size=(nhidden,))
-kernel = rng.normal(loc=0.0, scale=0.5, size=(M, nhidden))
+r = rng.normal(loc=0.0, scale=1.0, size=(M,))/np.sqrt(M)
+v_bias = rng.normal(loc=0.0, scale=1.0, size=(M,))/np.sqrt(M)
+h_bias = rng.normal(loc=0.0, scale=1.0, size=(nhidden,))/np.sqrt(nhidden)
+kernel = rng.normal(loc=0.0, scale=1.0, size=(M, nhidden))/np.sqrt(M*nhidden)
 #jax_wf = NonInteractRBM()
 
 
 
-wf = AniRBMwf()
+wf = AniRBMwf(N, dim )
 
 print("wf wf: ", wf.wf(r, v_bias, h_bias, kernel))
 print("wf df: ", wf.drift_force(r, v_bias, h_bias, kernel))
@@ -126,12 +126,12 @@ print("LE: ", LocalEnergy(N, dim, nhidden, r.reshape(N, dim), v_bias.reshape(N, 
 print("Wf: ", np.log(WaveFunction(N, dim, nhidden, r.reshape(N, dim), v_bias.reshape(N, dim), h_bias, kernel.reshape(N, dim, nhidden))))
 rbm = RWM(wf)
 
-energies = rbm.train(training_iterations, nsamples, r, v_bias, h_bias, kernel, 2113, eta=0.05)
+energies = rbm.train(training_iterations, nsamples, r, v_bias, h_bias, kernel, 2113, eta=0.02, scale=0.3)
 
 for i, energy in enumerate(energies):
     #if energy < 2.5:
     plt.scatter(i, energy)
-    plt.hlines(0.5, 0, 100, linestyle="dashed")
+    plt.hlines(15.0, 0, 100, linestyle="dashed")
     plt.xlabel("Epoch")
     plt.ylabel("Energy")
-plt.savefig("test.pdf")
+plt.savefig("100P3DInteractingH4.pdf")
