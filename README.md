@@ -6,16 +6,12 @@ This repository contains programs made for project 2 in FYS4411
 
 ### Structure
 
-The [latex folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/latex) contains the LaTeX source for building the report, as well as [figures](https://github.com/nicolossus/FYS4411-Project1/tree/main/latex/figures) and [tables](https://github.com/nicolossus/FYS4411-Project1/tree/main/tables) generated in the analyses.
+The [latex folder](https://github.com/nicolossus/FYS4411-Project2/tree/main/latex) contains the LaTeX source for building the report, as well as [figures](https://github.com/nicolossus/FYS4411-Project2/tree/main/latex/figures) and [tables](https://github.com/nicolossus/FYS4411-Project2/tree/main/tables) generated in the analyses.
 
-The [notebooks folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/notebooks) contains Jupyter Notebooks used in the analyses. For details, see the [notebooks readme](https://github.com/nicolossus/FYS4411-Project1/blob/main/notebooks/README.md).
+The [notebooks folder](https://github.com/nicolossus/FYS4411-Project2/tree/main/notebooks) contains Jupyter Notebooks used in the analyses.
 
-The [report folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/report) contains the report rendered to PDF from the LaTeX source.
+The [report folder](https://github.com/nicolossus/FYS4411-Project2/tree/main/report) contains the report rendered to PDF from the LaTeX source.
 
-The [resources folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/resources) contains project resources such as literature.
+The [resources folder](https://github.com/nicolossus/FYS4411-Project2/tree/main/resources) contains project resources such as literature.
 
-The [src folder](https://github.com/nicolossus/FYS4411-Project1/tree/main/src) contains the source code. For details, see the [src readme](https://github.com/nicolossus/FYS4411-Project1/blob/main/src/vmc/README.md).
-
-The [tests folder](https://github.com/FYS4411-Project1/tree/main/tests) contains unit tests. Run tests locally with `pytest`:
-
-    $ pytest tests -v -W ignore
+The [nqs folder](https://github.com/nicolossus/FYS4411-Project2/tree/main/nqs) contains the NQS package source code.
